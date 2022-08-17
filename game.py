@@ -76,6 +76,9 @@ class Enemy(pygame.sprite.Sprite):
 # Initialize pygame
 pygame.init()
 
+# Setup the clock for a decent framerate
+clock = pygame.time.Clock()
+
 # Set up the drawing window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -141,6 +144,9 @@ while running:
 
     # Update the display
     pygame.display.flip()
+    
+    # Ensure program maintains a rate of 30 frames per second
+    clock.tick(30)
 
 # Done! Time to quit.
 pygame.quit()
