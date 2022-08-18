@@ -55,21 +55,49 @@ class Player(pygame.sprite.Sprite):
             
             
 class Fireball(pygame.sprite.Sprite):
-    def __init__(self, position: pygame.Rect, target: tuple):
+    """
+    :param position: the position of the fireball
+    :param target: tuple of (x, y) coordinates indicating the target location
+    :param modifiers: a dictionary of modifiers to apply to the fireball
+    """
+    
+    def __init__(self, position: pygame.Rect, target: tuple, modifiers: dict = {}):
         super(Fireball, self).__init__()
-        self.surf = pygame.Surface((20, 10))
-        self.surf.fill((255, 0, 0))
-        self.rect = position
+        
+        # Initialize the surface
+        self.surf = pygame.Surface((50, 50))
+        self.surf.fill((255, 255, 255))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        
+        # Set required attributes
+        self.rect = self.surf.get_rect(center=position.center)
         self.target = target
-        self.speed = random.randint(5, 20)
+        
+        # Set optional attributes
+        self.speed = modifiers.get('speed', 10)
+        self.radius = modifiers.get('radius', 5)
+        
+        # Compute attributes
+        self.trajectory = self.calc_trajectory()
+        
+        # Draw the fireball
+        pygame.draw.circle(
+            self.surf, 
+            (255, 0, 0), 
+            self.surf.get_rect().center, 
+            self.radius
+        )
+        
+    def calc_trajectory(self):
         dx = self.target[0] - self.rect.centerx
         dy = self.target[1] - self.rect.centery
         radians = atan2(dy, dx)
-        self.velocityx = self.speed * cos(radians)
-        self.velocityy = self.speed * sin(radians)
-        
+        velocityx = self.speed * cos(radians)
+        velocityy = self.speed * sin(radians)
+        return velocityx, velocityy
+    
     def update(self):
-        self.rect.move_ip(self.velocityx, self.velocityy)
+        self.rect.move_ip(*self.trajectory)
         if self.rect.right < 0:
             self.kill()
         
