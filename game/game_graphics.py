@@ -91,3 +91,21 @@ class Projectile(pygame.sprite.Sprite):
         self.rect.move_ip(*self.trajectory)
         if self.rect.right < 0 or self.total_frames >= self.life:
             self.kill()
+
+class Palette(pygame.sprite.Sprite):
+    def __init__(self, character):
+        super(Palette, self).__init__()
+        self._character = character
+        self.surf = pygame.Surface((200, 50))
+        self.rect = self.surf.get_rect()
+        
+    def update(self):
+        left = 0
+        for i, spell in enumerate(self._character.palette):
+            if i == self._character.current_spell_index:
+                pygame.draw.rect(self.surf, (0, 255, 0), (left, 0, 50, 50), width=2)
+            else:
+                pygame.draw.rect(self.surf, (255, 255, 255), (left, 0, 50, 50), width=2)
+            pygame.draw.circle(self.surf, spell.element.color, (left + 25, 25), 10)
+            left += 50
+        

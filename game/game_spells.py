@@ -5,8 +5,8 @@ class Element(Enum):
     WATER = auto(), (0, 0, 255)
     EARTH = auto(), (255, 255, 0)
     AIR = auto(), (0, 255, 255)
-    LIGHT = auto(), (0, 0, 0)
-    DARK = auto(), (255, 255, 255)
+    LIGHT = auto(), (255, 255, 255)
+    DARK = auto(), (0, 0, 0)
     NONE = auto(), (0, 255, 0)
     
     def __new__(cls, *args, **kwargs):
