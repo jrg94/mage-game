@@ -61,10 +61,10 @@ class Projectile(pygame.sprite.Sprite):
         self.target = target
 
         # Set optional attributes
-        self.speed = modifiers.get('speed', 10)
-        self.radius = modifiers.get('radius', 5)
-        self.color = modifiers.get('color', (255, 0, 0))
-        self.life_in_frames = modifiers.get('life_in_frames', 15)
+        self.speed = modifiers.get('speed_in_pixels', 10)
+        self.radius = modifiers.get('radius_in_pixels', 5)
+        self.color = modifiers.get('color_in_rgb', (255, 0, 0))
+        self.life = modifiers.get('life_in_frames', 15)
 
         # Compute attributes
         self.trajectory = self.calc_trajectory()
@@ -89,5 +89,5 @@ class Projectile(pygame.sprite.Sprite):
     def update(self):
         self.total_frames += 1
         self.rect.move_ip(*self.trajectory)
-        if self.rect.right < 0 or self.total_frames >= self.life_in_frames:
+        if self.rect.right < 0 or self.total_frames >= self.life:
             self.kill()
