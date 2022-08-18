@@ -3,6 +3,7 @@
 # Import and initialize the pygame library
 import pygame
 import random
+from math import atan2, sin, cos
 
 # Import pygame.locals for easier access to key coordinates
 # Updated to conform to flake8 and black standards
@@ -15,6 +16,7 @@ from pygame.locals import (
     K_ESCAPE,
     KEYDOWN,
     QUIT,
+    MOUSEBUTTONUP
 )
 
 # Define constants for the screen width and height
@@ -28,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         super(Player, self).__init__()
         self.surf = pygame.image.load("player.png").convert()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect()
+        self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
         
     # Move the sprite based on user keypresses
     def update(self, pressed_keys):
@@ -51,25 +53,23 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom >= SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
             
-# Define the enemy object by extending pygame.sprite.Sprite
-# The surface you draw on the screen is now an attribute of 'enemy'
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self):
-        super(Enemy, self).__init__()
+            
+class Fireball(pygame.sprite.Sprite):
+    def __init__(self, position: pygame.Rect, target: tuple):
+        super(Fireball, self).__init__()
         self.surf = pygame.Surface((20, 10))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect(
-            center=(
-                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
-                random.randint(0, SCREEN_HEIGHT),
-            )
-        )
+        self.surf.fill((255, 0, 0))
+        self.rect = position
+        self.target = target
         self.speed = random.randint(5, 20)
-
-    # Move the sprite based on speed
-    # Remove the sprite when it passes the left edge of the screen
+        dx = self.target[0] - self.rect.centerx
+        dy = self.target[1] - self.rect.centery
+        radians = atan2(dy, dx)
+        self.velocityx = self.speed * cos(radians)
+        self.velocityy = self.speed * sin(radians)
+        
     def update(self):
-        self.rect.move_ip(-self.speed, 0)
+        self.rect.move_ip(self.velocityx, self.velocityy)
         if self.rect.right < 0:
             self.kill()
         
@@ -82,17 +82,13 @@ clock = pygame.time.Clock()
 # Set up the drawing window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-# Create a custom event for adding a new enemy
-ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 250)
-
 # Instantiate player. Right now, this is just a rectangle.
 player = Player()
 
 # Create groups to hold enemy sprites and all sprites
 # - enemies is used for collision detection and position updates
 # - all_sprites is used for rendering
-enemies = pygame.sprite.Group()
+attacks = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -108,17 +104,15 @@ while running:
             # Was it the Escape key? If so, stop the loop.
             if event.key == K_ESCAPE:
                 running = False
+        
+        if event.type == MOUSEBUTTONUP and event.button == 1:
+            fireball = Fireball(player.rect.copy(), pygame.mouse.get_pos())
+            all_sprites.add(fireball)
+            attacks.add(fireball)
 
         # Did the user click the window close button? If so, stop the loop.
         elif event.type == QUIT:
             running = False
-            
-        # Add a new enemy?
-        elif event.type == ADDENEMY:
-            # Create the new enemy and add it to sprite groups
-            new_enemy = Enemy()
-            enemies.add(new_enemy)
-            all_sprites.add(new_enemy)
             
     # Get the set of keys pressed and check for user input
     pressed_keys = pygame.key.get_pressed()
@@ -126,8 +120,8 @@ while running:
     # Update the player sprite based on user keypresses
     player.update(pressed_keys)
     
-    # Update enemy position
-    enemies.update()
+    # Update fireball position
+    attacks.update()
     
     # Fill the screen with black
     screen.fill((0, 0, 0))
@@ -135,12 +129,6 @@ while running:
     # Draw all sprites
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
-        
-    # Check if any enemies have collided with the player
-    if pygame.sprite.spritecollideany(player, enemies):
-        # If so, then remove the player and stop the loop
-        player.kill()
-        running = False
 
     # Update the display
     pygame.display.flip()
