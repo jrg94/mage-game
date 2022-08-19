@@ -53,9 +53,13 @@ class GameController():
                     if event.key == K_4:
                         self.model.palette.current_spell_index = 3
                 if event.type == MOUSEBUTTONUP and event.button == 1:
-                    self.view.create_projectile(self.generate_modifiers())
+                    if self.model.palette.can_cast_active_spell():
+                        self.model.palette.reset_active_spell_cooldown()
+                        self.view.create_projectile(self.generate_modifiers())
                 elif event.type == QUIT:
                     running = False
+
+            self.model.palette.update_cooldowns(self.view.clock.get_time())
 
             pressed_keys = pygame.key.get_pressed()
             self.view.player.update(pressed_keys)
