@@ -34,6 +34,7 @@ class Projectile(pygame.sprite.Sprite):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
         self.total_frames = 0
+        self.trajectory = None
 
     def update(self, modifiers: dict):
         """
@@ -41,10 +42,11 @@ class Projectile(pygame.sprite.Sprite):
         
         :param modifiers: a dictionary of modifiers for the projectile.
         """
-        trajectory = modifiers.get('trajectory_in_pixels', (10, 10))
+        if not self.trajectory:
+            self.trajectory = modifiers.get('trajectory_in_pixels', (10, 10))
         life = modifiers.get('life_in_frames', 15)
         self.total_frames += 1
-        self.rect.move_ip(*trajectory)
+        self.rect.move_ip(*self.trajectory)
         if self.rect.right < 0 or self.total_frames >= life:
             self.kill()
 

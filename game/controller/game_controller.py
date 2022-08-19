@@ -14,12 +14,11 @@ class GameController():
         current_spell = self.model.palette[self.model.current_spell_index]
         
         # Calculate trajectory
-        speed = current_spell.speed_level * 10
         dx = pygame.mouse.get_pos()[0] - self.view.player.rect.centerx
         dy = pygame.mouse.get_pos()[1] - self.view.player.rect.centery
         radians = atan2(dy, dx)
-        velocityx = speed * cos(radians)
-        velocityy = speed * sin(radians)
+        velocityx = current_spell.speed() * cos(radians)
+        velocityy = current_spell.speed() * sin(radians)
         
         return {
             'trajectory_in_pixels': (velocityx, velocityy),
@@ -29,7 +28,6 @@ class GameController():
         }
 
     def run(self):
-        current_modifiers = {}
         running = True
         while running:
             for event in pygame.event.get():
@@ -45,14 +43,13 @@ class GameController():
                     if event.key == K_4:
                         self.model.current_spell_index = 3
                 if event.type == MOUSEBUTTONUP and event.button == 1:
-                    current_modifiers = self.generate_modifiers()
-                    self.view.create_projectile(current_modifiers)
+                    self.view.create_projectile(self.generate_modifiers())
                 elif event.type == QUIT:
                     running = False
 
             pressed_keys = pygame.key.get_pressed()
             self.view.player.update(pressed_keys)
-            self.view.attacks.update(current_modifiers)
+            self.view.attacks.update(self.generate_modifiers())
             self.view.palette.update(self.model.palette, self.model.current_spell_index)
             self.view.screen.fill((0, 0, 0))
 
