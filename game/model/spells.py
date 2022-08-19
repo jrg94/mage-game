@@ -52,7 +52,7 @@ class Projectile:
     damage_level: int = 1
 
     BASE_SPEED: ClassVar[float] = 5.0
-    BASE_RADIUS: ClassVar[float] = .1
+    BASE_RADIUS: ClassVar[float] = .25
     BASE_DISTANCE: ClassVar[float] = 10.0
     BASE_DAMAGE: ClassVar[int] = 1
 

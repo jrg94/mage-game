@@ -12,7 +12,7 @@ class GameView():
     :param screen_height: the height of the screen in pixels.
     """
     
-    def __init__(self, screen_width: int = 800, screen_height: int = 600):
+    def __init__(self, screen_width: int = 1920, screen_height: int = 1080):
         pygame.init()
         
         # Save user inputs
@@ -26,6 +26,7 @@ class GameView():
             self.screen_width, 
             self.screen_height
         ))
+        self.fps = 30
         
         # Initialize sprites and sprite groups
         self.player = sprites.Player()
@@ -47,7 +48,7 @@ class GameView():
         
         :param modifiers: a dictionary of modifiers for the projectile.
         """
-        
+        print(modifiers)
         projectile = sprites.Projectile()
         
         # Set starting position

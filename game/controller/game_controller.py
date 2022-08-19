@@ -1,4 +1,5 @@
 from math import atan2, cos, sin
+import math
 
 import pygame
 from pygame.locals import (K_1, K_2, K_3, K_4, K_ESCAPE, KEYDOWN,
@@ -6,24 +7,33 @@ from pygame.locals import (K_1, K_2, K_3, K_4, K_ESCAPE, KEYDOWN,
 
 
 class GameController():
+    
     def __init__(self, model, view):
         self.model = model
         self.view = view
+        self.meters_to_pixels = self.view.screen.get_width() / self.model.world_width
         
-    def generate_modifiers(self):
-        current_spell = self.model.palette[self.model.current_spell_index]
+    def compute_trajectory(self, speed: float) -> tuple:
+        """
+        A handy method for computing the path of a projectile in components
+        of speed as pixels.
         
-        # Calculate trajectory
+        :param speed: the speed of the projectile in meters per second.
+        :return: the trajectory of the projectile in xy components of pixels/frame
+        """
         dx = pygame.mouse.get_pos()[0] - self.view.player.rect.centerx
         dy = pygame.mouse.get_pos()[1] - self.view.player.rect.centery
         radians = atan2(dy, dx)
-        velocityx = current_spell.speed() * cos(radians)
-        velocityy = current_spell.speed() * sin(radians)
+        velocityx = (speed * cos(radians) * self.meters_to_pixels) / self.view.fps
+        velocityy = (speed * sin(radians) * self.meters_to_pixels) / self.view.fps
+        return (velocityx, velocityy)
         
+    def generate_modifiers(self):
+        current_spell = self.model.palette[self.model.current_spell_index]
         return {
-            'trajectory_in_pixels': (velocityx, velocityy),
-            'radius_in_pixels': current_spell.radius_level * 5,
-            'life_in_frames': current_spell.distance_level * 15,
+            'trajectory_in_pixels_per_frame': self.compute_trajectory(current_spell.speed()),
+            'radius_in_pixels': math.ceil(current_spell.radius() * self.meters_to_pixels),
+            'distance_in_pixels': math.ceil(current_spell.distance() * self.meters_to_pixels),
             'color_in_rgb': current_spell.element.color
         }
 
@@ -57,6 +67,6 @@ class GameController():
                 self.view.screen.blit(entity.surf, entity.rect)
 
             pygame.display.flip()
-            self.view.clock.tick(30)
+            self.view.clock.tick(self.view.fps)
 
         pygame.quit()

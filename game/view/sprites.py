@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame.locals import (K_DOWN, K_LEFT, K_RIGHT, K_UP, RLEACCEL, K_a, K_d,
                            K_s, K_w)
@@ -33,7 +34,7 @@ class Projectile(pygame.sprite.Sprite):
         self.surf.fill((255, 255, 255))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
-        self.total_frames = 0
+        self.travel_distance: float = 0
         self.trajectory = None
 
     def update(self, modifiers: dict):
@@ -43,11 +44,11 @@ class Projectile(pygame.sprite.Sprite):
         :param modifiers: a dictionary of modifiers for the projectile.
         """
         if not self.trajectory:
-            self.trajectory = modifiers.get('trajectory_in_pixels', (10, 10))
-        life = modifiers.get('life_in_frames', 15)
-        self.total_frames += 1
+            self.trajectory = modifiers.get('trajectory_in_pixels_per_frame')
+        total_distance = modifiers.get('distance_in_pixels')
+        self.travel_distance += math.sqrt(self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
         self.rect.move_ip(*self.trajectory)
-        if self.rect.right < 0 or self.total_frames >= life:
+        if self.rect.right < 0 or self.travel_distance >= total_distance:
             self.kill()
 
 

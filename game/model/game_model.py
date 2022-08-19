@@ -9,3 +9,4 @@ class GameState():
             spells.Projectile(spells.Element.AIR),
         ]
         self.current_spell_index = 0
+        self.world_width = 100 # in meters
