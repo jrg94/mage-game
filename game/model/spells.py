@@ -29,7 +29,7 @@ class Element(Enum):
         return self._color
 
 
-@dataclass
+@dataclass(frozen=True)
 class Projectile:
     """
     A projectile-based spell.
@@ -50,11 +50,13 @@ class Projectile:
     radius_level: int = 1
     distance_level: int = 1
     damage_level: int = 1
+    cooldown_level: int = 1 
 
     BASE_SPEED: ClassVar[float] = 5.0
     BASE_RADIUS: ClassVar[float] = .25
     BASE_DISTANCE: ClassVar[float] = 10.0
     BASE_DAMAGE: ClassVar[int] = 1
+    MAX_COOLDOWN: ClassVar[float] = 2.0
 
     @staticmethod
     def scale(level: int, base: float) -> float:
@@ -85,5 +87,8 @@ class Projectile:
     def distance(self) -> float:
         return self.scale(self.distance_level, self.BASE_DISTANCE)
     
-    def damage(self) -> float:
-        return self.scale(self.damage_level, self.BASE_DAMAGE)
+    def damage(self) -> int:
+        return math.ceil(self.scale(self.damage_level, self.BASE_DAMAGE))
+    
+    def cooldown(self) -> float:
+        return self.scale(self.cooldown_level, self.MAX_COOLDOWN) # TODO: this increases cooldown

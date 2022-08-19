@@ -1,12 +1,7 @@
-from model import spells
+from model import spells, pallette
+from dataclasses import dataclass
 
-class GameState():
-    def __init__(self):
-        self.palette = [
-            spells.Projectile(spells.Element.FIRE), 
-            spells.Projectile(spells.Element.WATER),
-            spells.Projectile(spells.Element.EARTH),
-            spells.Projectile(spells.Element.AIR),
-        ]
-        self.current_spell_index = 0
-        self.world_width = 100 # in meters
+@dataclass
+class GameState:
+    palette: pallette.Palette = pallette.Palette()
+    world_width: int = 100 # in meters

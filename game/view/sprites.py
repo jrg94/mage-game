@@ -58,10 +58,10 @@ class Palette(pygame.sprite.Sprite):
         self.surf = pygame.Surface((200, 50))
         self.rect = self.surf.get_rect()
 
-    def update(self, palette: list, current_spell_index: int):
+    def update(self, palette):
         left = 0
-        for i, spell in enumerate(palette):
-            if i == current_spell_index:
+        for i, spell in enumerate(palette.spells.keys()):
+            if i == palette.current_spell_index:
                 pygame.draw.rect(self.surf, (0, 255, 0),
                                  (left, 0, 50, 50), width=2)
             else:

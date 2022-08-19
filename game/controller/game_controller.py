@@ -29,7 +29,7 @@ class GameController():
         return (velocityx, velocityy)
         
     def generate_modifiers(self):
-        current_spell = self.model.palette[self.model.current_spell_index]
+        current_spell = self.model.palette.get_active_spell()
         return {
             'trajectory_in_pixels_per_frame': self.compute_trajectory(current_spell.speed()),
             'radius_in_pixels': math.ceil(current_spell.radius() * self.meters_to_pixels),
@@ -45,13 +45,13 @@ class GameController():
                     if event.key == K_ESCAPE:
                         running = False
                     if event.key == K_1:
-                        self.model.current_spell_index = 0
+                        self.model.palette.current_spell_index = 0
                     if event.key == K_2:
-                        self.model.current_spell_index = 1
+                        self.model.palette.current_spell_index = 1
                     if event.key == K_3:
-                        self.model.current_spell_index = 2
+                        self.model.palette.current_spell_index = 2
                     if event.key == K_4:
-                        self.model.current_spell_index = 3
+                        self.model.palette.current_spell_index = 3
                 if event.type == MOUSEBUTTONUP and event.button == 1:
                     self.view.create_projectile(self.generate_modifiers())
                 elif event.type == QUIT:
@@ -60,7 +60,7 @@ class GameController():
             pressed_keys = pygame.key.get_pressed()
             self.view.player.update(pressed_keys)
             self.view.attacks.update(self.generate_modifiers())
-            self.view.palette.update(self.model.palette, self.model.current_spell_index)
+            self.view.palette.update(self.model.palette)
             self.view.screen.fill((0, 0, 0))
 
             for entity in self.view.all_sprites:
