@@ -33,6 +33,8 @@ class GameView():
         
     def create_projectile(self, modifiers: dict):
         projectile = sprites.Projectile()
+        
+        # Set starting position
         rect = projectile.surf.get_rect(center=self.player.rect.center)
         projectile.rect = rect
         
