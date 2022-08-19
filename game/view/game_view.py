@@ -5,6 +5,13 @@ import view.sprites as sprites
 
 
 class GameView():
+    """
+    The game window as drawn on the screen.
+    
+    :param screen_width: the width of the screen in pixels.
+    :param screen_height: the height of the screen in pixels.
+    """
+    
     def __init__(self, screen_width: int = 800, screen_height: int = 600):
         pygame.init()
         
@@ -29,9 +36,18 @@ class GameView():
         self.all_sprites.add(self.palette)
         
     def register_observer(self, controller: game_controller.GameController):
+        """
+        Sets up the controller to be notified of events.
+        """
         self.controller = controller
         
     def create_projectile(self, modifiers: dict):
+        """
+        A method for generating a projectile sprite. 
+        
+        :param modifiers: a dictionary of modifiers for the projectile.
+        """
+        
         projectile = sprites.Projectile()
         
         # Set starting position

@@ -25,10 +25,6 @@ class Player(pygame.sprite.Sprite):
 class Projectile(pygame.sprite.Sprite):
     """
     A generic projectile class that can be used to create different types of projectiles.
-
-    :param position: the position of the projectile
-    :param target: tuple of (x, y) coordinates indicating the target location
-    :param modifiers: a dictionary of modifiers to apply to the projectile
     """
 
     def __init__(self):
@@ -40,6 +36,11 @@ class Projectile(pygame.sprite.Sprite):
         self.total_frames = 0
 
     def update(self, modifiers: dict):
+        """
+        Animates the projectile from a list of modifiers. 
+        
+        :param modifiers: a dictionary of modifiers for the projectile.
+        """
         trajectory = modifiers.get('trajectory_in_pixels', (10, 10))
         life = modifiers.get('life_in_frames', 15)
         self.total_frames += 1
