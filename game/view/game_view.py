@@ -12,20 +12,15 @@ class GameView():
     :param screen_height: the height of the screen in pixels.
     """
     
-    def __init__(self, screen_width: int = 1920, screen_height: int = 1080):
+    def __init__(self):
         pygame.init()
-        
-        # Save user inputs
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-        
+                
         # Setup key fields
         self.controller = None
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode((
-            self.screen_width, 
-            self.screen_height
-        ))
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen_width = pygame.display.Info().current_w
+        self.screen_height = pygame.display.Info().current_h
         self.fps = 30
         
         # Initialize sprites and sprite groups
@@ -48,7 +43,6 @@ class GameView():
         
         :param modifiers: a dictionary of modifiers for the projectile.
         """
-        print(modifiers)
         projectile = sprites.Projectile()
         
         # Set starting position
