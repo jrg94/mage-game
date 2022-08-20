@@ -92,7 +92,7 @@ class GraphicalView(object):
         Set up the pygame graphical display and loads graphical resources.
         """
 
-        result = pygame.init()
+        pygame.init()
         pygame.font.init()
         pygame.display.set_caption('Mage Game')
         self.screen = pygame.display.set_mode((800, 600))
