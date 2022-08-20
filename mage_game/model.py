@@ -154,12 +154,12 @@ class Projectile:
     :cvar float MAX_COOLDOWN: the maximum cooldown of the spell in seconds.
     """
 
-    element: Element = Element.NONE
-    speed_level: int = 1
-    radius_level: int = 1
-    distance_level: int = 1
-    damage_level: int = 1
-    cooldown_level: int = 1
+    _element: Element = Element.NONE
+    _speed_level: int = 1
+    _radius_level: int = 1
+    _distance_level: int = 1
+    _damage_level: int = 1
+    _cooldown_level: int = 1
 
     BASE_SPEED: ClassVar[float] = 5.0
     BASE_RADIUS: ClassVar[float] = .25
@@ -176,6 +176,14 @@ class Projectile:
         :param base: the base value of the spell parameter.
         """
         return math.log(level, 2) * base + base
+    
+    def element(self) -> Element:
+        """
+        Retrieves the element of the spell.
+        
+        :return: the element of the spell.
+        """
+        return self._element
 
     def speed(self) -> float:
         """
@@ -187,21 +195,23 @@ class Projectile:
             - Speed level 2: 20 meters per second
             - Speed level 3: ~25.85 meters per second
             - Speed level 4: 30 meters per second
+            
+        :return: the speed of the projectile in meters per second.
         """
-        return self.scale(self.speed_level, self.BASE_SPEED)
+        return self.scale(self._speed_level, self.BASE_SPEED)
 
     def radius(self) -> float:
-        return self.scale(self.radius_level, self.BASE_RADIUS)
+        return self.scale(self._radius_level, self.BASE_RADIUS)
 
     def distance(self) -> float:
-        return self.scale(self.distance_level, self.BASE_DISTANCE)
+        return self.scale(self._distance_level, self.BASE_DISTANCE)
 
     def damage(self) -> int:
-        return math.ceil(self.scale(self.damage_level, self.BASE_DAMAGE))
+        return math.ceil(self.scale(self._damage_level, self.BASE_DAMAGE))
 
     def cooldown(self) -> float:
         # TODO: this increases cooldown
-        return self.scale(self.cooldown_level, self.MAX_COOLDOWN)
+        return self.scale(self._cooldown_level, self.MAX_COOLDOWN)
 
 
 @dataclass
@@ -213,7 +223,7 @@ class PaletteItem:
     :param float cooldown: the remaining time on the cooldown of the spell in milliseconds.
     """
 
-    spell: Projectile
+    spell: Projectile = field(default_factory=Projectile)
     cooldown: float = Projectile.MAX_COOLDOWN * 1000
 
     def can_use(self) -> bool:
