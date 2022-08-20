@@ -201,15 +201,38 @@ class Projectile:
         return self.scale(self._speed_level, self.BASE_SPEED)
 
     def radius(self) -> float:
+        """
+        Computes the radius of the projectile in meters. See speed() for more information
+        on how the scaling works.
+        
+        :return: the radius of the projectile in meters.
+        """
         return self.scale(self._radius_level, self.BASE_RADIUS)
 
     def distance(self) -> float:
+        """
+        Computes the distance the projectile travels in meters. See speed() for more information
+        on how the scaling works.
+        
+        :return: the distance the projectile travels in meters.
+        """
         return self.scale(self._distance_level, self.BASE_DISTANCE)
 
     def damage(self) -> int:
+        """
+        Computes the damage of the projectile in hit points. See speed() for more information
+        on how the scaling works.
+        
+        :return: the damage of the projectile in hit points.
+        """
         return math.ceil(self.scale(self._damage_level, self.BASE_DAMAGE))
 
     def cooldown(self) -> float:
+        """
+        Computes the cooldown of the projectile in seconds. 
+        
+        :return: the cooldown of the projectile in seconds.
+        """
         # TODO: this increases cooldown
         return self.scale(self._cooldown_level, self.MAX_COOLDOWN)
 
@@ -223,22 +246,24 @@ class PaletteItem:
     :param float cooldown: the remaining time on the cooldown of the spell in milliseconds.
     """
 
-    spell: Projectile = field(default_factory=Projectile)
-    cooldown: float = Projectile.MAX_COOLDOWN * 1000
+    _spell: Projectile = field(default_factory=Projectile)
+    _cooldown: float = Projectile.MAX_COOLDOWN * 1000
 
     def can_use(self) -> bool:
         """
         Returns True if the palette item is ready to be used.
+        
+        :return: True if the palette item is ready to be used.
         """
-        return self.cooldown <= 0.0
+        return self._cooldown <= 0.0
 
     def reset_cooldown(self, cooldown: float):
         """
         Resets the cooldown of the palette item.
 
-        :cooldown: the cooldown of the palette item in milliseconds.
+        :param cooldown: the cooldown of the palette item in milliseconds.
         """
-        self.cooldown = cooldown
+        self._cooldown = cooldown
 
 
 @dataclass
@@ -250,38 +275,38 @@ class Palette:
     :param int current_spell_index: the index of the active spell in the palette.
     """
 
-    items: list[PaletteItem] = field(default_factory=lambda: [
+    _items: list[PaletteItem] = field(default_factory=lambda: [
         PaletteItem(Projectile(Element.FIRE)),
         PaletteItem(Projectile(Element.WATER)),
         PaletteItem(Projectile(Element.EARTH)),
         PaletteItem(Projectile(Element.AIR)),
     ])
-    current_spell_index: int = 0
+    _current_spell_index: int = 0
 
     def get_active_item(self) -> PaletteItem:
         """
         Retrieves the currently active spell from the palette.
 
-        :returns: the currently active spell.
+        :return: the currently active spell.
         """
-        return self.items[self.current_spell_index]
+        return self._items[self._current_spell_index]
 
-    def update_cooldowns(self, dt: float) -> bool:
+    def update_cooldowns(self, dt: float):
         """
         Lowers cooldowns for all spells in the palette.
 
         :param float dt: the time in milliseconds since the last update.
         """
-        for palette_item in self.items:
-            palette_item.cooldown -= dt
-            if palette_item.cooldown <= 0:
-                palette_item.cooldown = 0
+        for palette_item in self._items:
+            palette_item._cooldown -= dt
+            if palette_item._cooldown <= 0:
+                palette_item._cooldown = 0
 
     def can_cast_active_spell(self) -> bool:
         """
         Verifies that the currently active spell can be cast.
 
-        :returns: True if the spell can be cast, False otherwise.
+        :return: True if the spell can be cast, False otherwise.
         """
         return self.get_active_item().can_use()
 
@@ -289,4 +314,4 @@ class Palette:
         """
         Resets the cooldown of the currently active spell.
         """
-        self.get_active_item().reset_cooldown(self.get_active_item().cooldown() * 1000)
+        self.get_active_item().reset_cooldown(self.get_active_item()._cooldown() * 1000)
