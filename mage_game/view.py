@@ -151,7 +151,8 @@ class GraphicalView(object):
         trajectory = self._compute_trajectory(active_palette_item.get_spell().speed(), event.clickpos)
         projectile = Projectile( 
             trajectory,
-            math.ceil(active_palette_item.get_spell().distance() * self.meters_to_pixels)
+            math.ceil(active_palette_item.get_spell().distance() * self.meters_to_pixels),
+            self.player.rect.center,
         )
         
         # Set starting position 
@@ -218,13 +219,14 @@ class Projectile(pygame.sprite.Sprite):
     A generic projectile class that can be used to create different types of projectiles.
     """
 
-    def __init__(self, trajectory: tuple, distance_in_pixels: int):
+    def __init__(self, trajectory: tuple, distance_in_pixels: int, pos: tuple):
         super(Projectile, self).__init__()
         self.surf = pygame.Surface((50, 50))
         self.surf.fill((255, 255, 255))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect()
-        self.trajectory: tuple = trajectory
+        self.rect = self.surf.get_rect(center=pos)
+        self.pos = pygame.Vector2(pos)
+        self.trajectory = pygame.Vector2(trajectory)
         self.distance_in_pixels: int = distance_in_pixels
         self.travel_distance: float = 0
         
@@ -234,8 +236,9 @@ class Projectile(pygame.sprite.Sprite):
         
         :param modifiers: a dictionary of modifiers for the projectile.
         """
+        self.pos += self.trajectory
         self.travel_distance += math.sqrt(self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
-        self.rect.move_ip(*self.trajectory)
+        self.rect.center = self.pos
         if self.rect.right < 0 or self.travel_distance >= self.distance_in_pixels:
             self.kill()
 
