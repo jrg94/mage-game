@@ -9,7 +9,7 @@ class GraphicalView(object):
     Draws the model state onto the screen.
     """
 
-    def __init__(self, evManager, model):
+    def __init__(self, evManager, model: model.GameEngine):
         """
         evManager (EventManager): Allows posting messages to the event queue.
         model (GameEngine): a strong reference to the game Model.
@@ -23,7 +23,7 @@ class GraphicalView(object):
         
         self.evManager = evManager
         evManager.RegisterListener(self)
-        self.model: model.GameEngine = model
+        self.model = model
         self.isinitialized = False
         self.fps = None
         self.meters_to_pixels = None
@@ -62,8 +62,11 @@ class GraphicalView(object):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
-            if currentstate == model.STATE_PLAY and event.clickpos:
-                self.rendercast(event)
+            if currentstate == model.STATE_PLAY:
+                if event.clickpos:
+                    self.rendercast(event)
+                if event.char and event.char in "1234":
+                    self.renderpalette(event)
             
     def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
         """
@@ -175,6 +178,18 @@ class GraphicalView(object):
         self.attacks.add(projectile)
         self.all_sprites.add(projectile)
         
+        self.all_sprites.update()
+        for entity in self.all_sprites:
+            self.screen.blit(entity.surf, entity.rect)
+        pygame.display.flip()
+        
+        
+    def renderpalette(self, event: InputEvent):
+        """
+        Render the palette.
+        """
+        self.screen.fill((0, 0, 0))
+        self.model.palette.set_active_palette_item(int(event.char) - 1)
         self.all_sprites.update()
         for entity in self.all_sprites:
             self.screen.blit(entity.surf, entity.rect)

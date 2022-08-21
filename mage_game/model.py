@@ -289,7 +289,7 @@ class Palette:
         PaletteItem(Projectile(Element.EARTH)),
         PaletteItem(Projectile(Element.AIR)),
     ])
-    _current_spell_index: int = 0
+    _current_item_index: int = 0
 
     def get_active_item(self) -> PaletteItem:
         """
@@ -297,7 +297,7 @@ class Palette:
 
         :return: the currently active spell.
         """
-        return self._items[self._current_spell_index]
+        return self._items[self._current_item_index]
     
     def get_active_item_index(self) -> int:
         """
@@ -305,7 +305,7 @@ class Palette:
 
         :return: the index of the currently active spell.
         """
-        return self._current_spell_index
+        return self._current_item_index
 
     def update_cooldowns(self, dt: float):
         """
@@ -339,3 +339,11 @@ class Palette:
         :return: the list of spells in the palette.
         """
         return self._items
+    
+    def set_active_palette_item(self, index: int):
+        """
+        Sets the currently active spell in the palette.
+        
+        :param index: the index of the spell in the palette.
+        """
+        self._current_item_index = index
