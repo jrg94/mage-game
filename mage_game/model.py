@@ -264,6 +264,14 @@ class PaletteItem:
         :param cooldown: the cooldown of the palette item in milliseconds.
         """
         self._cooldown = cooldown
+        
+    def get_spell(self) -> Projectile:
+        """
+        Returns the spell of the palette item.
+        
+        :return: the spell of the palette item.
+        """
+        return self._spell
 
 
 @dataclass
@@ -290,6 +298,14 @@ class Palette:
         :return: the currently active spell.
         """
         return self._items[self._current_spell_index]
+    
+    def get_active_item_index(self) -> int:
+        """
+        Retrieves the index of the currently active spell from the palette.
+
+        :return: the index of the currently active spell.
+        """
+        return self._current_spell_index
 
     def update_cooldowns(self, dt: float):
         """
@@ -315,3 +331,11 @@ class Palette:
         Resets the cooldown of the currently active spell.
         """
         self.get_active_item().reset_cooldown(self.get_active_item()._cooldown() * 1000)
+        
+    def get_items(self) -> list[PaletteItem]:
+        """
+        Retrieves the list of spells in the palette.
+        
+        :return: the list of spells in the palette.
+        """
+        return self._items

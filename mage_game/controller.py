@@ -2,7 +2,7 @@ import pygame
 import model
 from eventmanager import *
 
-class Keyboard(object):
+class MouseAndKeyboard:
     """
     Handles keyboard input.
     """
@@ -39,6 +39,8 @@ class Keyboard(object):
                             self.keydownplay(event)
                         if currentstate == model.STATE_HELP:
                             self.keydownhelp(event)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.mousedownplay(event)
 
     def keydownmenu(self, event):
         """
@@ -73,3 +75,11 @@ class Keyboard(object):
             self.evManager.Post(StateChangeEvent(model.STATE_HELP))
         else:
             self.evManager.Post(InputEvent(event.unicode, None))
+            
+    def mousedownplay(self, event):
+        """
+        Handles play mouse events.
+        """
+
+        if event.button == 1:
+            self.evManager.Post(InputEvent(None, event.pos))

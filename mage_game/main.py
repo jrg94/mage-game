@@ -6,7 +6,7 @@ import controller
 def run():
     evManager = eventmanager.EventManager()
     gamemodel = model.GameEngine(evManager)
-    keyboard = controller.Keyboard(evManager, gamemodel)
+    keyboard = controller.MouseAndKeyboard(evManager, gamemodel)
     graphics = view.GraphicalView(evManager, gamemodel)
     gamemodel.run()
 
