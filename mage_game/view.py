@@ -1,26 +1,29 @@
 import math
+
 import pygame
+from pygame.locals import RLEACCEL
+
 import model
 from eventmanager import *
-from pygame.locals import RLEACCEL
+
 
 class GraphicalView(object):
     """
     Draws the model state onto the screen.
     """
 
-    def __init__(self, evManager, model: model.GameEngine):
+    def __init__(self, evManager: model.EventManager, model: model.GameEngine):
         """
         evManager (EventManager): Allows posting messages to the event queue.
         model (GameEngine): a strong reference to the game Model.
-                
+
         Attributes:
         isinitialized (bool): pygame is ready to draw.
         screen (pygame.Surface): the screen surface.
         clock (pygame.time.Clock): keeps the fps constant.
         smallfont (pygame.Font): a small font.
         """
-        
+
         self.evManager = evManager
         evManager.RegisterListener(self)
         self.model = model
@@ -34,7 +37,7 @@ class GraphicalView(object):
         self.palette = None
         self.attacks = None
         self.all_sprites = None
-    
+
     def notify(self, event):
         """
         Receive events posted to the message queue. 
@@ -56,7 +59,6 @@ class GraphicalView(object):
                 self.renderplay()
             if currentstate == model.STATE_HELP:
                 self.renderhelp()
-            # limit the redraw speed to 30 frames per second
             self.clock.tick(self.fps)
         elif isinstance(event, InputEvent):
             if not self.isinitialized:
@@ -67,34 +69,36 @@ class GraphicalView(object):
                     self.rendercast(event)
                 if event.char and event.char in "1234":
                     self.renderpalette(event)
-            
+
     def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
         """
         A handy method for computing the path of a projectile in components
         of speed as pixels.
-        
+
         :param speed: the speed of the projectile in meters per second.
         :return: the trajectory of the projectile in xy components of pixels/frame
         """
         dx = click_position[0] - self.player.rect.centerx
         dy = click_position[1] - self.player.rect.centery
         radians = math.atan2(dy, dx)
-        velocityx = (speed * math.cos(radians) * self.meters_to_pixels) / self.fps
-        velocityy = (speed * math.sin(radians) * self.meters_to_pixels) / self.fps
+        velocityx = (speed * math.cos(radians) *
+                     self.meters_to_pixels) / self.fps
+        velocityy = (speed * math.sin(radians) *
+                     self.meters_to_pixels) / self.fps
         return (velocityx, velocityy)
-    
+
     def _create_projectile(self, modifiers: dict):
         """
         A method for generating a projectile sprite. 
-        
+
         :param modifiers: a dictionary of modifiers for the projectile.
         """
         projectile = Projectile()
-        
+
         # Set starting position
         rect = projectile.surf.get_rect(center=self.player.rect.center)
         projectile.rect = rect
-        
+
         # Set optional attributes
         radius = modifiers.get('radius_in_pixels', 5)
         color = modifiers.get('color_in_rgb', (255, 0, 0))
@@ -106,37 +110,43 @@ class GraphicalView(object):
             projectile.surf.get_rect().center,
             radius
         )
-        
+
         # Add projectile to sprite group
         self.attacks.add(projectile)
         self.all_sprites.add(projectile)
-    
+
     def rendermenu(self):
         """
         Render the game menu.
         """
         self.screen.fill((0, 0, 0))
         somewords = self.smallfont.render(
-                    'You are in the Menu. Space to play. Esc exits.', 
-                    True, (0, 255, 0))
+            'You are in the Menu. Space to play. Esc exits.',
+            True, (0, 255, 0))
         self.screen.blit(somewords, (0, 0))
         pygame.display.flip()
-        
+
     def renderplay(self):
         """
         Render the game play.
         """
 
         self.screen.fill((0, 0, 0))
+        self.model.palette.update_cooldowns(self.clock.get_time())
         self.all_sprites.update()
         somewords = self.smallfont.render(
-                    'You are Playing the game. F1 for help.', 
-                    True, (0, 255, 0))
-        self.screen.blit(somewords, (0, 0))
+            'You are playing the game. F1 for help.',
+            True, 
+            (0, 255, 0)
+        )
+        self.screen.blit(
+            somewords, 
+            (0, self.screen.get_height() - somewords.get_height())
+        )
         for entity in self.all_sprites:
             self.screen.blit(entity.surf, entity.rect)
         pygame.display.flip()
-        
+
     def renderhelp(self):
         """
         Render the help screen.
@@ -144,46 +154,64 @@ class GraphicalView(object):
 
         self.screen.fill((0, 0, 0))
         somewords = self.smallfont.render(
-                    'Help is here. space, escape or return.', 
-                    True, (0, 255, 0))
+            'Help is here. space, escape or return.',
+            True, (0, 255, 0))
         self.screen.blit(somewords, (0, 0))
         pygame.display.flip()
-        
-    def rendercast(self, event: InputEvent):
-        active_palette_item = self.model.palette.get_active_item()
-        trajectory = self._compute_trajectory(active_palette_item.get_spell().speed(), event.clickpos)
-        projectile = Projectile( 
-            trajectory,
-            math.ceil(active_palette_item.get_spell().distance() * self.meters_to_pixels),
-            self.player.rect.center,
-        )
-        
-        # Set starting position 
-        rect = projectile.surf.get_rect(center=self.player.rect.center)
-        projectile.rect = rect
-            
-        # Set optional attributes
-        radius = math.ceil(active_palette_item.get_spell().radius() * self.meters_to_pixels)
-        color = active_palette_item.get_spell().element().color
 
-        # Draw projectile
-        pygame.draw.circle(
-            projectile.surf,
-            color,
-            projectile.surf.get_rect().center,
-            radius
-        )
+    def rendercast(self, event: InputEvent):
+        """
+        Render a spell cast.
+        """
+        
+        if self.model.palette.can_cast_active_spell():
             
-        # Add projectile to sprite group
-        self.attacks.add(projectile)
-        self.all_sprites.add(projectile)
-        
-        self.all_sprites.update()
-        for entity in self.all_sprites:
-            self.screen.blit(entity.surf, entity.rect)
-        pygame.display.flip()
-        
-        
+            # Reset projectile cooldown
+            self.model.palette.reset_active_spell_cooldown()
+            
+            # Create projectile sprite
+            active_palette_item = self.model.palette.get_active_item()
+            trajectory = self._compute_trajectory(
+                active_palette_item.get_spell().speed(), 
+                event.clickpos
+            )
+            distance = math.ceil(
+                active_palette_item.get_spell().distance() * self.meters_to_pixels
+            )
+            projectile = Projectile(
+                trajectory,
+                distance,
+                self.player.rect.center,
+            )
+
+            # Set starting position
+            rect = projectile.surf.get_rect(center=self.player.rect.center)
+            projectile.rect = rect
+
+            # Set optional attributes
+            radius = math.ceil(
+                active_palette_item.get_spell().radius() * self.meters_to_pixels)
+            color = active_palette_item.get_spell().element().color
+
+            # Draw projectile
+            pygame.draw.circle(
+                projectile.surf,
+                color,
+                projectile.surf.get_rect().center,
+                radius
+            )
+
+            # Add projectile to sprite group
+            self.attacks.add(projectile)
+            self.all_sprites.add(projectile)
+
+            # Render sprites
+            self.all_sprites.update()
+            for entity in self.all_sprites:
+                self.screen.blit(entity.surf, entity.rect)
+                
+            pygame.display.flip()
+
     def renderpalette(self, event: InputEvent):
         """
         Render the palette.
@@ -194,8 +222,7 @@ class GraphicalView(object):
         for entity in self.all_sprites:
             self.screen.blit(entity.surf, entity.rect)
         pygame.display.flip()
-        
-        
+
     def initialize(self):
         """
         Set up the pygame graphical display and loads graphical resources.
@@ -217,7 +244,7 @@ class GraphicalView(object):
         self.all_sprites.add(self.palette)
         self.isinitialized = True
 
-  
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, position):
         super(Player, self).__init__()
@@ -244,15 +271,16 @@ class Projectile(pygame.sprite.Sprite):
         self.trajectory = pygame.Vector2(trajectory)
         self.distance_in_pixels: int = distance_in_pixels
         self.travel_distance: float = 0
-        
+
     def update(self):
         """
         Animates the projectile from a list of modifiers. 
-        
+
         :param modifiers: a dictionary of modifiers for the projectile.
         """
         self.pos += self.trajectory
-        self.travel_distance += math.sqrt(self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
+        self.travel_distance += math.sqrt(
+            self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
         self.rect.center = self.pos
         if self.rect.right < 0 or self.travel_distance >= self.distance_in_pixels:
             self.kill()
@@ -270,23 +298,22 @@ class Palette(pygame.sprite.Sprite):
         for i, item in enumerate(self.palette.get_items()):
             if i == self.palette.get_active_item_index():
                 pygame.draw.rect(
-                    self.surf, 
+                    self.surf,
                     (0, 255, 0),
-                    (left, 0, 50, 50), 
+                    (left, 0, 50, 50),
                     width=2
                 )
             else:
                 pygame.draw.rect(
-                    self.surf, 
+                    self.surf,
                     (255, 255, 255),
-                    (left, 0, 50, 50), 
+                    (left, 0, 50, 50),
                     width=2
                 )
             pygame.draw.circle(
-                self.surf, 
-                item.get_spell().element().color, 
-                (left + 25, 25), 
+                self.surf,
+                item.get_spell().element().color,
+                (left + 25, 25),
                 10
             )
             left += 50
-

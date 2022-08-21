@@ -9,26 +9,23 @@ from eventmanager import *
 class GameEngine(object):
     """
     Tracks the game state.
+
+    :param event_manager: the event manager.
     """
 
-    def __init__(self, evManager: EventManager):
-        """
-        evManager (EventManager): Allows posting messages to the event queue.
-
-        Attributes:
-        running (bool): True while the engine is online. Changed via QuitEvent().
-        """
-
-        self.evManager: EventManager = evManager
-        evManager.RegisterListener(self)
+    def __init__(self, event_manager: EventManager):
+        self.event_manager: EventManager = event_manager
+        self.event_manager.RegisterListener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
         self.palette: Palette = Palette()
         self.world_width: int = 100  # in meters
 
-    def notify(self, event):
+    def notify(self, event: EventManager) -> None:
         """
         Called by an event in the message queue. 
+
+        :param event: the current event.
         """
 
         if isinstance(event, QuitEvent):
@@ -38,12 +35,12 @@ class GameEngine(object):
             if not event.state:
                 # false if no more states are left
                 if not self.state.pop():
-                    self.evManager.Post(QuitEvent())
+                    self.event_manager.Post(QuitEvent())
             else:
                 # push a new state on the stack
                 self.state.push(event.state)
 
-    def run(self):
+    def run(self) -> None:
         """
         Starts the game engine loop.
 
@@ -51,11 +48,11 @@ class GameEngine(object):
         The loop ends when this object hears a QuitEvent in notify(). 
         """
         self.running = True
-        self.evManager.Post(InitializeEvent())
+        self.event_manager.Post(InitializeEvent())
         self.state.push(STATE_MENU)
         while self.running:
             newTick = TickEvent()
-            self.evManager.Post(newTick)
+            self.event_manager.Post(newTick)
 
 
 # State machine constants for the StateMachine class below
@@ -74,37 +71,39 @@ class StateMachine(object):
     """
 
     def __init__(self):
-        self.statestack = []
+        self.state_stack = []
 
-    def peek(self):
+    def peek(self) -> int | None:
         """
-        Returns the current state without altering the stack.
-        Returns None if the stack is empty.
+        Without altering the stack, returns the current state.
+        
+        :return: the current state or None if the stack is empty.
         """
         try:
-            return self.statestack[-1]
+            return self.state_stack[-1]
         except IndexError:
-            # empty stack
             return None
 
-    def pop(self):
+    def pop(self) -> int | None:
         """
-        Returns the current state and remove it from the stack.
-        Returns None if the stack is empty.
+        Remove the top state from the stack and return it.
+        
+        :return: the current state or None if the stack is empty.
         """
         try:
-            self.statestack.pop()
-            return len(self.statestack) > 0
+            self.state_stack.pop()
+            return len(self.state_stack) > 0
         except IndexError:
-            # empty stack
             return None
 
-    def push(self, state):
+    def push(self, state) -> int:
         """
         Push a new state onto the stack.
-        Returns the pushed value.
+        
+        :param state: the new state to push on the stack.
+        :return: the new state.
         """
-        self.statestack.append(state)
+        self.state_stack.append(state)
         return state
 
 
@@ -176,11 +175,11 @@ class Projectile:
         :param base: the base value of the spell parameter.
         """
         return math.log(level, 2) * base + base
-    
+
     def element(self) -> Element:
         """
         Retrieves the element of the spell.
-        
+
         :return: the element of the spell.
         """
         return self._element
@@ -195,7 +194,7 @@ class Projectile:
             - Speed level 2: 20 meters per second
             - Speed level 3: ~25.85 meters per second
             - Speed level 4: 30 meters per second
-            
+
         :return: the speed of the projectile in meters per second.
         """
         return self.scale(self._speed_level, self.BASE_SPEED)
@@ -204,7 +203,7 @@ class Projectile:
         """
         Computes the radius of the projectile in meters. See speed() for more information
         on how the scaling works.
-        
+
         :return: the radius of the projectile in meters.
         """
         return self.scale(self._radius_level, self.BASE_RADIUS)
@@ -213,7 +212,7 @@ class Projectile:
         """
         Computes the distance the projectile travels in meters. See speed() for more information
         on how the scaling works.
-        
+
         :return: the distance the projectile travels in meters.
         """
         return self.scale(self._distance_level, self.BASE_DISTANCE)
@@ -222,7 +221,7 @@ class Projectile:
         """
         Computes the damage of the projectile in hit points. See speed() for more information
         on how the scaling works.
-        
+
         :return: the damage of the projectile in hit points.
         """
         return math.ceil(self.scale(self._damage_level, self.BASE_DAMAGE))
@@ -230,7 +229,7 @@ class Projectile:
     def cooldown(self) -> float:
         """
         Computes the cooldown of the projectile in seconds. 
-        
+
         :return: the cooldown of the projectile in seconds.
         """
         # TODO: this increases cooldown
@@ -247,12 +246,12 @@ class PaletteItem:
     """
 
     _spell: Projectile = field(default_factory=Projectile)
-    _cooldown: float = Projectile.MAX_COOLDOWN * 1000
+    _cooldown: float = 0.0
 
     def can_use(self) -> bool:
         """
         Returns True if the palette item is ready to be used.
-        
+
         :return: True if the palette item is ready to be used.
         """
         return self._cooldown <= 0.0
@@ -264,11 +263,11 @@ class PaletteItem:
         :param cooldown: the cooldown of the palette item in milliseconds.
         """
         self._cooldown = cooldown
-        
+
     def get_spell(self) -> Projectile:
         """
         Returns the spell of the palette item.
-        
+
         :return: the spell of the palette item.
         """
         return self._spell
@@ -298,7 +297,7 @@ class Palette:
         :return: the currently active spell.
         """
         return self._items[self._current_item_index]
-    
+
     def get_active_item_index(self) -> int:
         """
         Retrieves the index of the currently active spell from the palette.
@@ -330,20 +329,21 @@ class Palette:
         """
         Resets the cooldown of the currently active spell.
         """
-        self.get_active_item().reset_cooldown(self.get_active_item()._cooldown() * 1000)
-        
+        self.get_active_item().reset_cooldown(
+            self.get_active_item().get_spell().cooldown() * 1000)
+
     def get_items(self) -> list[PaletteItem]:
         """
         Retrieves the list of spells in the palette.
-        
+
         :return: the list of spells in the palette.
         """
         return self._items
-    
+
     def set_active_palette_item(self, index: int):
         """
         Sets the currently active spell in the palette.
-        
+
         :param index: the index of the spell in the palette.
         """
         self._current_item_index = index
