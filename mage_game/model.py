@@ -76,7 +76,7 @@ class StateMachine(object):
     def peek(self) -> int | None:
         """
         Without altering the stack, returns the current state.
-        
+
         :return: the current state or None if the stack is empty.
         """
         try:
@@ -87,7 +87,7 @@ class StateMachine(object):
     def pop(self) -> int | None:
         """
         Remove the top state from the stack and return it.
-        
+
         :return: the current state or None if the stack is empty.
         """
         try:
@@ -99,7 +99,7 @@ class StateMachine(object):
     def push(self, state) -> int:
         """
         Push a new state onto the stack.
-        
+
         :param state: the new state to push on the stack.
         :return: the new state.
         """
@@ -132,7 +132,12 @@ class Element(Enum):
         return self.value
 
     @property
-    def color(self):
+    def color(self) -> tuple:
+        """
+        Retrieves the color of the element.
+
+        :return: the color of the element in (r, g, b) format.
+        """
         return self._color
 
 
@@ -173,6 +178,7 @@ class Projectile:
 
         :param level: the level of the spell parameter.
         :param base: the base value of the spell parameter.
+        :return: the scaled value of the spell parameter.
         """
         return math.log(level, 2) * base + base
 
@@ -256,7 +262,7 @@ class PaletteItem:
         """
         return self._cooldown <= 0.0
 
-    def reset_cooldown(self, cooldown: float):
+    def reset_cooldown(self, cooldown: float) -> None:
         """
         Resets the cooldown of the palette item.
 
@@ -306,7 +312,7 @@ class Palette:
         """
         return self._current_item_index
 
-    def update_cooldowns(self, dt: float):
+    def update_cooldowns(self, dt: float) -> None:
         """
         Lowers cooldowns for all spells in the palette.
 
@@ -325,7 +331,7 @@ class Palette:
         """
         return self.get_active_item().can_use()
 
-    def reset_active_spell_cooldown(self):
+    def reset_active_spell_cooldown(self) -> None:
         """
         Resets the cooldown of the currently active spell.
         """
@@ -340,7 +346,7 @@ class Palette:
         """
         return self._items
 
-    def set_active_palette_item(self, index: int):
+    def set_active_palette_item(self, index: int) -> None:
         """
         Sets the currently active spell in the palette.
 
