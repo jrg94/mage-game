@@ -21,7 +21,8 @@ STATE_HELP = 3
 STATE_ABOUT = 4
 STATE_PLAY = 5
 
-class GameEngine(object):
+
+class GameEngine:
     """
     Tracks the game state.
 
@@ -33,9 +34,9 @@ class GameEngine(object):
         self.event_manager.RegisterListener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
-        self.palette: Palette = Palette()
         self.world_width: int = 100  # in meters
         self.enemies: list[Enemy] = [Enemy()]
+        self.character = Character.new_character()
 
     def notify(self, event: EventManager) -> None:
         """
@@ -325,12 +326,7 @@ class Palette:
     :param int current_spell_index: the index of the active spell in the palette.
     """
 
-    _items: list[PaletteItem] = field(default_factory=lambda: [
-        PaletteItem(Projectile(Element.FIRE)),
-        PaletteItem(Projectile(Element.WATER)),
-        PaletteItem(Projectile(Element.EARTH)),
-        PaletteItem(Projectile(Element.AIR)),
-    ])
+    _items: list[PaletteItem] = field(default_factory=list)
     _current_item_index: int = 0
     _casting_time: int = 0
 
@@ -406,3 +402,24 @@ class Palette:
 @dataclass
 class Enemy:
     _hp: int = 100
+    
+@dataclass
+class Character:
+    spell_book: list = field(default_factory=list)
+    palette: Palette = field(default_factory=Palette)
+    
+    @staticmethod
+    def new_character():
+        character = Character()
+        character.spell_book.extend([
+            Projectile(Element.FIRE),
+            Projectile(Element.WATER),
+            Projectile(Element.EARTH),
+            Projectile(Element.AIR),
+            Projectile(Element.LIGHT),
+            Projectile(Element.DARK),
+        ])
+        character.palette.get_items().extend([
+            PaletteItem(spell) for spell in character.spell_book[:4]
+        ])
+        return character

@@ -101,8 +101,8 @@ class GraphicalView(object):
 
         # Process play game logic
         self.handle_collisions()
-        self.model.palette.update_cooldowns(self.clock.get_time())
-        self.model.palette.update_casting_time(self.clock.get_time())
+        self.model.character.palette.update_cooldowns(self.clock.get_time())
+        self.model.character.palette.update_casting_time(self.clock.get_time())
         self.all_sprites.update()
 
         # Render the scene
@@ -138,12 +138,12 @@ class GraphicalView(object):
         Render a spell cast.
         """
         
-        if self.model.palette.can_cast_active_spell():
+        if self.model.character.palette.can_cast_active_spell():
             
-            self.model.palette.reset_casting_time()
+            self.model.character.palette.reset_casting_time()
         
             # Create projectile sprite
-            active_spell = self.model.palette.get_active_item().get_spell()
+            active_spell = self.model.character.palette.get_active_item().get_spell()
             radius = math.ceil(active_spell.radius() * self.meters_to_pixels)
             color = active_spell.element().color
             trajectory = self._compute_trajectory(
@@ -187,7 +187,7 @@ class GraphicalView(object):
         Render the palette.
         """
         self.screen.fill((0, 0, 0))
-        self.model.palette.set_active_palette_item(int(event.char) - 1)
+        self.model.character.palette.set_active_palette_item(int(event.char) - 1)
         self.all_sprites.update()
         for entity in self.all_sprites:
             self.screen.blit(entity.surf, entity.rect)
@@ -227,7 +227,7 @@ class GraphicalView(object):
         self.all_sprites.add(self.player)
         
         # Setting up palette
-        self.palette = Palette(self.model.palette)
+        self.palette = Palette(self.model.character.palette)
         self.all_sprites.add(self.palette)
         
         # Setting up dummy enemies
@@ -370,5 +370,10 @@ class Palette(pygame.sprite.Sprite):
             )
             left += 50
 
-            
+class Progress(pygame.sprite.Sprite):
+     def __init__(self, source: model.Palette):
+        super(Palette, self).__init__()
+        self.surf = pygame.Surface((200, 50))
+        self.rect = self.surf.get_rect()
+        self.source: model.Palette = source         
         
