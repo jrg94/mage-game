@@ -99,6 +99,7 @@ class GraphicalView(object):
 
         self.screen.fill((0, 0, 0))
         self.model.palette.update_cooldowns(self.clock.get_time())
+        self.model.palette.update_casting_time(self.clock.get_time())
         self.all_sprites.update()
         somewords = self.smallfont.render(
             'You are playing the game. F1 for help.',
@@ -132,22 +133,22 @@ class GraphicalView(object):
         
         if self.model.palette.can_cast_active_spell():
             
-            # Reset projectile cooldown
-            self.model.palette.reset_active_spell_cooldown()
-            
+            self.model.palette.reset_casting_time()
+        
             # Create projectile sprite
-            active_palette_item = self.model.palette.get_active_item()
+            active_spell = self.model.palette.get_active_item().get_spell()
             trajectory = self._compute_trajectory(
-                active_palette_item.get_spell().speed(), 
+                active_spell.speed(),
                 event.click_pos
             )
             distance = math.ceil(
-                active_palette_item.get_spell().distance() * self.meters_to_pixels
+                active_spell.distance() * self.meters_to_pixels
             )
             projectile = Projectile(
                 trajectory,
                 distance,
                 self.player.rect.center,
+                active_spell.cast_time()
             )
 
             # Set starting position
@@ -156,8 +157,8 @@ class GraphicalView(object):
 
             # Set optional attributes
             radius = math.ceil(
-                active_palette_item.get_spell().radius() * self.meters_to_pixels)
-            color = active_palette_item.get_spell().element().color
+                active_spell.radius() * self.meters_to_pixels)
+            color = active_spell.element().color
 
             # Draw projectile
             pygame.draw.circle(
@@ -175,7 +176,7 @@ class GraphicalView(object):
             self.all_sprites.update()
             for entity in self.all_sprites:
                 self.screen.blit(entity.surf, entity.rect)
-                
+
             pygame.display.flip()
 
     def render_palette(self, event: InputEvent):
@@ -237,9 +238,13 @@ class Projectile(pygame.sprite.Sprite):
     """
     A generic projectile sprite class that can be used to 
     create different types of projectiles.
+    
+    :param trajectory: the xy velocity of the projectile
+    :param distance_in_pixels: the distance the projectile should travel in pixels
+    :param pos: the starting position of the projectile.
     """
 
-    def __init__(self, trajectory: tuple, distance_in_pixels: int, pos: tuple):
+    def __init__(self, trajectory: tuple, distance_in_pixels: int, pos: tuple, cast_time: float):
         super(Projectile, self).__init__()
         self.surf = pygame.Surface((50, 50))
         self.surf.fill((255, 255, 255))
@@ -248,18 +253,20 @@ class Projectile(pygame.sprite.Sprite):
         self.pos = pygame.Vector2(pos)
         self.trajectory = pygame.Vector2(trajectory)
         self.distance_in_pixels: int = distance_in_pixels
+        self.cast_time = cast_time
         self.travel_distance: float = 0
+        self.start_time: float = pygame.time.get_ticks()
 
     def update(self):
         """
         Animates the projectile. 
         """
-        self.pos += self.trajectory
-        self.travel_distance += math.sqrt(
-            self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
-        self.rect.center = self.pos
-        if self.rect.right < 0 or self.travel_distance >= self.distance_in_pixels:
-            self.kill()
+        if pygame.time.get_ticks() - self.start_time > self.cast_time * 1000:
+            self.pos += self.trajectory
+            self.travel_distance += math.sqrt(self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
+            self.rect.center = self.pos
+            if self.rect.right < 0 or self.travel_distance >= self.distance_in_pixels:
+                self.kill()
 
 
 class Palette(pygame.sprite.Sprite):
@@ -267,11 +274,14 @@ class Palette(pygame.sprite.Sprite):
         super(Palette, self).__init__()
         self.surf = pygame.Surface((200, 50))
         self.rect = self.surf.get_rect()
-        self.palette: model.Palette = palette
+        self.palette: model.Palette = palette        
 
     def update(self):
         left = 0
+        self.surf.fill((0, 0, 0))
+        active_spell = self.palette.get_active_item().get_spell()
         for i, item in enumerate(self.palette.get_items()):
+            # Draw green square for active item
             if i == self.palette.get_active_item_index():
                 pygame.draw.rect(
                     self.surf,
@@ -279,6 +289,7 @@ class Palette(pygame.sprite.Sprite):
                     (left, 0, 50, 50),
                     width=2
                 )
+            # Draw white square otherwise
             else:
                 pygame.draw.rect(
                     self.surf,
@@ -286,6 +297,15 @@ class Palette(pygame.sprite.Sprite):
                     (left, 0, 50, 50),
                     width=2
                 )
+            # Show cast time 
+            if self.palette.get_remaining_casting_time() > 0:
+                ratio = self.palette.get_remaining_casting_time() / (active_spell.cast_time() * 1000)
+                pygame.draw.rect(
+                    self.surf,
+                    (155, 155, 155, 100),
+                    (left + 2, 2, 46, 46 * ratio)
+                )
+            # Add colored circle to square
             pygame.draw.circle(
                 self.surf,
                 item.get_spell().element().color,
@@ -293,3 +313,6 @@ class Palette(pygame.sprite.Sprite):
                 10
             )
             left += 50
+
+            
+        

@@ -331,6 +331,7 @@ class Palette:
         PaletteItem(Projectile(Element.AIR)),
     ])
     _current_item_index: int = 0
+    _casting_time: int = 0
 
     def get_active_item(self) -> PaletteItem:
         """
@@ -365,7 +366,7 @@ class Palette:
 
         :return: True if the spell can be cast, False otherwise.
         """
-        return self.get_active_item().can_use()
+        return self.get_active_item().can_use() and self._casting_time <= 0
 
     def reset_active_spell_cooldown(self) -> None:
         """
@@ -389,3 +390,14 @@ class Palette:
         :param index: the index of the spell in the palette.
         """
         self._current_item_index = index
+        
+    def reset_casting_time(self) -> None:
+        self._casting_time = self.get_active_item().get_spell().cast_time() * 1000
+        
+    def update_casting_time(self, dt) -> None:
+        self._casting_time -= dt
+        if self._casting_time <= 0:
+            self._casting_time == 0
+            
+    def get_remaining_casting_time(self) -> int:
+        return self._casting_time
