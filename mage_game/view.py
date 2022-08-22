@@ -1,3 +1,4 @@
+from cgitb import text
 import math
 
 import pygame
@@ -198,10 +199,7 @@ class GraphicalView(object):
             for enemy in enemies:
                 if enemy not in attack.hit:
                     attack.hit.append(enemy)
-                    enemy.source._hp -= attack.source.damage()
-                    enemy.last_hit = attack.source.damage()
-                    if enemy.source._hp <= 0:
-                        enemy.kill()
+                    enemy.hit(attack.source.damage())
         pygame.display.flip()
 
     def initialize(self):
@@ -272,12 +270,27 @@ class Dummy(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.source = source
         self.smallfont = pygame.font.Font(None, 40)
-        self.last_hit: int | None = None        
+        self.last_hit: int | None = None
+        self.alpha = 255
+        
+    def hit(self, damage: int):
+        self.last_hit = damage
+        self.alpha = 255
+        self.source._hp -= damage
+        if self.source._hp <= 0:
+            self.kill()
         
     def update(self):
         if self.last_hit:
+            self.surf.fill((123, 0, 123))
             damage = self.smallfont.render(str(self.last_hit), True, (255, 0, 0))
-            self.surf.blit(damage, damage.get_rect(center=self.surf.get_rect().center))
+            text_surface = pygame.Surface((50, 50))
+            text_surface.fill((255, 0, 0))
+            text_surface.set_colorkey((255, 0, 0), RLEACCEL)
+            text_surface.blit(damage, damage.get_rect(center=text_surface.get_rect().center))
+            text_surface.set_alpha(self.alpha)
+            self.surf.blit(text_surface, text_surface.get_rect(center=self.surf.get_rect().center))
+            self.alpha //= 1.1
 
 
 class Projectile(pygame.sprite.Sprite):
