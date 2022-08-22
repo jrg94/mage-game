@@ -178,6 +178,7 @@ class AttributeTracking:
     _events: int = 0
     _scale: str = "logarithmic"
     _post: Callable = lambda x: x
+    _units: str = "m"
     
     def effective_value(self):
         """
@@ -205,13 +206,13 @@ class Projectile:
 
     _element: Element = Element.NONE
     _attributes: dict[SpellAttribute: AttributeTracking] = field(default_factory=lambda: {
-        SpellAttribute.SPEED: AttributeTracking(SpellAttribute.SPEED, BASE_SPEED),
+        SpellAttribute.SPEED: AttributeTracking(SpellAttribute.SPEED, BASE_SPEED, _units="m/s"),
         SpellAttribute.RADIUS: AttributeTracking(SpellAttribute.RADIUS, BASE_RADIUS),
         SpellAttribute.DISTANCE: AttributeTracking(SpellAttribute.DISTANCE, BASE_DISTANCE),
-        SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil),
-        SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse"),
-        SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse"),
-        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE)
+        SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil, _units="hp"),
+        SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse", _units="s"),
+        SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse", _units="s"),
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
     })
 
     def get_attribute(self, attribute: SpellAttribute) -> AttributeTracking | None:
@@ -362,7 +363,7 @@ class Palette:
     
 @dataclass
 class Enemy:
-    _hp: int = 100
+    _hp: int = 10
     
 @dataclass
 class Character:

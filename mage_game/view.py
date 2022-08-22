@@ -383,15 +383,30 @@ class Progress(pygame.sprite.Sprite):
         self.surf = pygame.Surface((600, 400))
         self.rect = self.surf.get_rect()
         self.source: model.Character = source  
-        self.smallfont = pygame.font.Font(None, 40)   
+        self.smallfont = pygame.font.Font(None, 24)   
         
     def update(self):
         self.surf.fill((123, 123, 123))
         top = 0
+        left = 0
         for spell in self.source.spell_book:
-            for attribute in spell._attributes:
-                text = self.smallfont.render("hi", True, (255, 255, 255))
-                self.surf.blit(text, (0, top))
+            text = self.smallfont.render(
+                f"{spell.element().name} Projectile: ", 
+                True, 
+                (255, 255, 255)
+            )
+            self.surf.blit(text, (left, top))
+            for attribute in spell._attributes.values():
                 top += text.get_height()
+                text = self.smallfont.render(
+                    f"{attribute._attribute.name}: {attribute.effective_value()} {attribute._units}", 
+                    True, 
+                    (255, 255, 255)
+                )
+                self.surf.blit(text, (left + 10, top))
+            top += text.get_height()    
+            if top + len(spell._attributes.values()) * text.get_height() > 400:
+                left += 300
+                top = 0
 
         
