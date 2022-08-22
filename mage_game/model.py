@@ -35,6 +35,7 @@ class GameEngine(object):
         self.state: StateMachine = StateMachine()
         self.palette: Palette = Palette()
         self.world_width: int = 100  # in meters
+        self.enemies: list[Enemy] = [Enemy()]
 
     def notify(self, event: EventManager) -> None:
         """
@@ -401,3 +402,7 @@ class Palette:
             
     def get_remaining_casting_time(self) -> int:
         return self._casting_time
+    
+@dataclass
+class Enemy:
+    _hp: int = 100
