@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from typing import Callable
 
 from eventmanager import *
 
@@ -176,6 +177,7 @@ class AttributeTracking:
     _level: int = 1
     _events: int = 0
     _scale: str = "logarithmic"
+    _post: Callable = lambda x: x
     
     def effective_value(self):
         """
@@ -187,9 +189,9 @@ class AttributeTracking:
         :return: the scaled value of the spell attribute.
         """
         if self._scale == "logarithmic":
-            return math.log(self._level, 2) * self._base + self._base
+            return self._post(math.log(self._level, 2) * self._base + self._base)
         elif self._scale == "inverse":
-            return 1 / (self._level) * self._base
+            return self._post(1 / (self._level) * self._base)
 
 
 @dataclass
@@ -198,21 +200,37 @@ class Projectile:
     A projectile-based spell.
 
     :param Element _element: the element of the spell.
-    :param int _speed: the speed attribute of the spell.
-    :param int _radius: the radius attribute of the spell.
-    :param int _distance: the distance attribute of the spell.
-    :param int _damage: the damage attribute of the spell.
+    :param dict[SpellAttribute, AttributeTracking] _attributes: a mapping of attribute types to their record keeping objects
     """
 
     _element: Element = Element.NONE
-    _speed: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.SPEED, BASE_SPEED))
-    _radius: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.RADIUS, BASE_RADIUS))
-    _distance: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.DISTANCE, BASE_DISTANCE))
-    _damage: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE))
-    _cooldown: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse"))
-    _cast_time: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse"))
-    _crit_chance: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE))
+    _attributes: dict[SpellAttribute: AttributeTracking] = field(default_factory=lambda: {
+        SpellAttribute.SPEED: AttributeTracking(SpellAttribute.SPEED, BASE_SPEED),
+        SpellAttribute.RADIUS: AttributeTracking(SpellAttribute.RADIUS, BASE_RADIUS),
+        SpellAttribute.DISTANCE: AttributeTracking(SpellAttribute.DISTANCE, BASE_DISTANCE),
+        SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil),
+        SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse"),
+        SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse"),
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE)
+    })
 
+    def get_attribute(self, attribute: SpellAttribute) -> AttributeTracking | None:
+        """
+        Retrieves an attribute based on the enum.
+        
+        :param attribute: a spell attribute enum used for differentiating spell attributes.
+        :return: the attribute or None
+        """
+        return self._attributes.get(attribute)
+    
+    def get_attribute_value(self, attribute: SpellAttribute) -> float:
+        """
+        Retrieves the value of an attribute.
+        
+        :param attribute: a spell attribute enum used for differentiating spell attributes.
+        :return: the value of the attribute
+        """
+        return self.get_attribute(attribute).effective_value()
 
     def element(self) -> Element:
         """
@@ -221,63 +239,6 @@ class Projectile:
         :return: the element of the spell.
         """
         return self._element
-
-    def speed(self) -> float:
-        """
-        Computes the speed of the projectile in meters per second.
-        Speed, as with all other spell parameters, follows a logarithmic curve (base 2).
-        If the base speed is 10 meters per second, the scaling might look as follows:
-
-            - Speed level 1: 10 meters per second
-            - Speed level 2: 20 meters per second
-            - Speed level 3: ~25.85 meters per second
-            - Speed level 4: 30 meters per second
-
-        :return: the speed of the projectile in meters per second.
-        """
-        return self._speed.effective_value()
-
-    def radius(self) -> float:
-        """
-        Computes the radius of the projectile in meters. See speed() for more information
-        on how the scaling works.
-
-        :return: the radius of the projectile in meters.
-        """
-        return self._radius.effective_value()
-
-    def distance(self) -> float:
-        """
-        Computes the distance the projectile travels in meters. See speed() for more information
-        on how the scaling works.
-
-        :return: the distance the projectile travels in meters.
-        """
-        return self._distance.effective_value()
-
-    def damage(self) -> int:
-        """
-        Computes the damage of the projectile in hit points. See speed() for more information
-        on how the scaling works.
-
-        :return: the damage of the projectile in hit points.
-        """
-        return math.ceil(self._damage.effective_value())
-
-    def cooldown(self) -> float:
-        """
-        Computes the cooldown of the projectile in seconds. 
-
-        :return: the cooldown of the projectile in seconds.
-        """
-        # TODO: this increases cooldown
-        return self._cooldown.effective_value()
-    
-    def cast_time(self) -> float:
-        return self._cast_time.effective_value()
-    
-    def crit_chance(self) -> float:
-        return self._crit_chance.effective_value()
 
 
 @dataclass
@@ -389,7 +350,7 @@ class Palette:
         self._current_item_index = index
         
     def reset_casting_time(self) -> None:
-        self._casting_time = self.get_active_item().get_spell().cast_time() * 1000
+        self._casting_time = self.get_active_item().get_spell().get_attribute_value(SpellAttribute.CAST_TIME) * 1000
         
     def update_casting_time(self, dt) -> None:
         self._casting_time -= dt
@@ -405,7 +366,7 @@ class Enemy:
     
 @dataclass
 class Character:
-    spell_book: list = field(default_factory=list)
+    spell_book: list[Projectile] = field(default_factory=list)
     palette: Palette = field(default_factory=Palette)
     
     @staticmethod
