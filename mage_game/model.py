@@ -1,10 +1,25 @@
 import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import ClassVar
 
 from eventmanager import *
 
+
+# Spell attribute constants
+BASE_SPEED: float = 5.0  # the base speed of the spell in meters per second.
+BASE_RADIUS: float = .25  # the base radius of the spell in meters.
+BASE_DISTANCE: float = 10.0  # the base distance of the spell in meters.
+BASE_DAMAGE: int = 1  # the base damage of the spell in hit points.
+BASE_COOLDOWN: float = 2.0  # the base cooldown of the spell in seconds.
+BASE_CAST_TIME: float = 2.0  # the base cast time of the spell in seconds.
+BASE_CRIT_CHANCE: float = .05  # the base chance of a critical hit.
+
+# State machine constants for the StateMachine class below
+STATE_INTRO = 1
+STATE_MENU = 2
+STATE_HELP = 3
+STATE_ABOUT = 4
+STATE_PLAY = 5
 
 class GameEngine(object):
     """
@@ -53,14 +68,6 @@ class GameEngine(object):
         while self.running:
             newTick = TickEvent()
             self.event_manager.Post(newTick)
-
-
-# State machine constants for the StateMachine class below
-STATE_INTRO = 1
-STATE_MENU = 2
-STATE_HELP = 3
-STATE_ABOUT = 4
-STATE_PLAY = 5
 
 
 class StateMachine(object):
@@ -141,46 +148,69 @@ class Element(Enum):
         return self._color
 
 
-@dataclass()
+class SpellAttribute(Enum):
+    DAMAGE = auto()
+    CRIT_CHANCE = auto()
+    COOLDOWN = auto()
+    CAST_TIME = auto()
+    DISTANCE = auto()
+    RADIUS  = auto()
+    SPEED = auto()
+
+
+@dataclass
+class AttributeTracking:
+    """
+    A handy class for tracking spell attributes.
+    
+    :param _attribute: the type of attribute to track.
+    :param _base: the base value of the attribute.
+    :param _level: the level of the attribute.
+    :param _events: the number of qualifying events to increase the attribute.
+    """
+    
+    _attribute: SpellAttribute
+    _base: float
+    _level: int = 1
+    _events: int = 0
+    _scale: str = "logarithmic"
+    
+    def effective_value(self):
+        """
+        A helper function that scales a value based on a base value.
+        The effective value can be computed in a variety of ways. Typically,
+        values that scale up will follow a logarithmic growth curve while 
+        values that scale down will follow an inverse growth curve.
+
+        :return: the scaled value of the spell attribute.
+        """
+        if self._scale == "logarithmic":
+            return math.log(self._level, 2) * self._base + self._base
+        elif self._scale == "inverse":
+            return 1 / (self._level) * self._base
+
+
+@dataclass
 class Projectile:
     """
     A projectile-based spell.
 
-    :param Element element: the element of the spell.
-    :param int speed_level: the speed level of the spell.
-    :param int radius_level: the radius level of the spell.
-    :param int distance_level: the distance level of the spell.
-    :param int damage_level: the damage level of the spell.
-    :cvar float BASE_SPEED: the base speed of the spell in meters per second.
-    :cvar float BASE_RADIUS: the base radius of the spell in meters.
-    :cvar float BASE_DISTANCE: the base distance of the spell in meters.
-    :cvar int BASE_DAMAGE: the base damage of the spell in hit points.
-    :cvar float MAX_COOLDOWN: the maximum cooldown of the spell in seconds.
+    :param Element _element: the element of the spell.
+    :param int _speed: the speed attribute of the spell.
+    :param int _radius: the radius attribute of the spell.
+    :param int _distance: the distance attribute of the spell.
+    :param int _damage: the damage attribute of the spell.
     """
 
     _element: Element = Element.NONE
-    _speed_level: int = 1
-    _radius_level: int = 1
-    _distance_level: int = 1
-    _damage_level: int = 1
-    _cooldown_level: int = 1
+    _speed: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.SPEED, BASE_SPEED))
+    _radius: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.RADIUS, BASE_RADIUS))
+    _distance: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.DISTANCE, BASE_DISTANCE))
+    _damage: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE))
+    _cooldown: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse"))
+    _cast_time: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse"))
+    _crit_chance: AttributeTracking = field(default_factory=lambda: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE))
 
-    BASE_SPEED: ClassVar[float] = 5.0
-    BASE_RADIUS: ClassVar[float] = .25
-    BASE_DISTANCE: ClassVar[float] = 10.0
-    BASE_DAMAGE: ClassVar[int] = 1
-    MAX_COOLDOWN: ClassVar[float] = 2.0
-
-    @staticmethod
-    def scale(level: int, base: float) -> float:
-        """
-        A helper function that scales a value based on a base value.
-
-        :param level: the level of the spell parameter.
-        :param base: the base value of the spell parameter.
-        :return: the scaled value of the spell parameter.
-        """
-        return math.log(level, 2) * base + base
 
     def element(self) -> Element:
         """
@@ -203,7 +233,7 @@ class Projectile:
 
         :return: the speed of the projectile in meters per second.
         """
-        return self.scale(self._speed_level, self.BASE_SPEED)
+        return self._speed.effective_value()
 
     def radius(self) -> float:
         """
@@ -212,7 +242,7 @@ class Projectile:
 
         :return: the radius of the projectile in meters.
         """
-        return self.scale(self._radius_level, self.BASE_RADIUS)
+        return self._radius.effective_value()
 
     def distance(self) -> float:
         """
@@ -221,7 +251,7 @@ class Projectile:
 
         :return: the distance the projectile travels in meters.
         """
-        return self.scale(self._distance_level, self.BASE_DISTANCE)
+        return self._distance.effective_value()
 
     def damage(self) -> int:
         """
@@ -230,7 +260,7 @@ class Projectile:
 
         :return: the damage of the projectile in hit points.
         """
-        return math.ceil(self.scale(self._damage_level, self.BASE_DAMAGE))
+        return math.ceil(self._damage.effective_value())
 
     def cooldown(self) -> float:
         """
@@ -239,7 +269,13 @@ class Projectile:
         :return: the cooldown of the projectile in seconds.
         """
         # TODO: this increases cooldown
-        return self.scale(self._cooldown_level, self.MAX_COOLDOWN)
+        return self._cooldown.effective_value()
+    
+    def cast_time(self) -> float:
+        return self._cast_time.effective_value()
+    
+    def crit_chance(self) -> float:
+        return self._crit_chance.effective_value()
 
 
 @dataclass
