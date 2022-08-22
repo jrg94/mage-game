@@ -1,1 +1,2 @@
 pygame==2.1.2
+cx_Freeze==6.11.1
