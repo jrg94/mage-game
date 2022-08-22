@@ -33,12 +33,14 @@ class InputEvent(Event):
     Keyboard or mouse input event.
     """
     
-    def __init__(self, unicodechar, clickpos):
+    def __init__(self, unicode_char: str = None, click_pos: tuple = None, button: str = None):
         self.name = "Input event"
-        self.char = unicodechar
-        self.clickpos = clickpos
+        self.char = unicode_char
+        self.click_pos = click_pos
+        self.button = button
+        
     def __str__(self):
-        return '%s, char=%s, clickpos=%s' % (self.name, self.char, self.clickpos)
+        return f'{self.name}, char={self.char}, clickpos={self.click_pos}, button={self.button}'
     
     
 class InitializeEvent(Event):

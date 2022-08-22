@@ -67,19 +67,19 @@ class MouseAndKeyboard:
         """
         Handles play key events.
         """
-
         if event.key == pygame.K_ESCAPE:
             self.evManager.Post(StateChangeEvent(None))
         # F1 shows the help
         if event.key == pygame.K_F1:    
             self.evManager.Post(StateChangeEvent(model.STATE_HELP))
         else:
-            self.evManager.Post(InputEvent(event.unicode, None))
+            self.evManager.Post(InputEvent(unicode_char=event.unicode))
             
     def mousedownplay(self, event):
         """
         Handles play mouse events.
         """
-
         if event.button == 1:
-            self.evManager.Post(InputEvent(None, event.pos))
+            self.evManager.Post(InputEvent(click_pos=event.pos, button="left"))
+        if event.button == 3:
+            self.evManager.Post(InputEvent(click_pos=event.pos, button="right"))

@@ -10,22 +10,14 @@ from eventmanager import *
 class GraphicalView(object):
     """
     Draws the model state onto the screen.
+    
+    :param event_manager: the event manager.
+    :param model: the model.
     """
 
-    def __init__(self, evManager: model.EventManager, model: model.GameEngine):
-        """
-        evManager (EventManager): Allows posting messages to the event queue.
-        model (GameEngine): a strong reference to the game Model.
-
-        Attributes:
-        isinitialized (bool): pygame is ready to draw.
-        screen (pygame.Surface): the screen surface.
-        clock (pygame.time.Clock): keeps the fps constant.
-        smallfont (pygame.Font): a small font.
-        """
-
-        self.evManager = evManager
-        evManager.RegisterListener(self)
+    def __init__(self, event_manager: model.EventManager, model: model.GameEngine):
+        self.evManager = event_manager
+        event_manager.RegisterListener(self)
         self.model = model
         self.isinitialized = False
         self.fps = None
@@ -38,9 +30,11 @@ class GraphicalView(object):
         self.attacks = None
         self.all_sprites = None
 
-    def notify(self, event):
+    def notify(self, event: Event):
         """
         Receive events posted to the message queue. 
+        
+        :param event: the event.
         """
 
         if isinstance(event, InitializeEvent):
@@ -54,21 +48,21 @@ class GraphicalView(object):
                 return
             currentstate = self.model.state.peek()
             if currentstate == model.STATE_MENU:
-                self.rendermenu()
+                self.render_menu()
             if currentstate == model.STATE_PLAY:
-                self.renderplay()
+                self.render_play()
             if currentstate == model.STATE_HELP:
-                self.renderhelp()
+                self.render_help()
             self.clock.tick(self.fps)
         elif isinstance(event, InputEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
             if currentstate == model.STATE_PLAY:
-                if event.clickpos:
-                    self.rendercast(event)
+                if event.click_pos and event.button == "left":
+                    self.render_cast(event)
                 if event.char and event.char in "1234":
-                    self.renderpalette(event)
+                    self.render_palette(event)
 
     def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
         """
@@ -87,35 +81,7 @@ class GraphicalView(object):
                      self.meters_to_pixels) / self.fps
         return (velocityx, velocityy)
 
-    def _create_projectile(self, modifiers: dict):
-        """
-        A method for generating a projectile sprite. 
-
-        :param modifiers: a dictionary of modifiers for the projectile.
-        """
-        projectile = Projectile()
-
-        # Set starting position
-        rect = projectile.surf.get_rect(center=self.player.rect.center)
-        projectile.rect = rect
-
-        # Set optional attributes
-        radius = modifiers.get('radius_in_pixels', 5)
-        color = modifiers.get('color_in_rgb', (255, 0, 0))
-
-        # Draw projectile
-        pygame.draw.circle(
-            projectile.surf,
-            color,
-            projectile.surf.get_rect().center,
-            radius
-        )
-
-        # Add projectile to sprite group
-        self.attacks.add(projectile)
-        self.all_sprites.add(projectile)
-
-    def rendermenu(self):
+    def render_menu(self):
         """
         Render the game menu.
         """
@@ -126,7 +92,7 @@ class GraphicalView(object):
         self.screen.blit(somewords, (0, 0))
         pygame.display.flip()
 
-    def renderplay(self):
+    def render_play(self):
         """
         Render the game play.
         """
@@ -147,7 +113,7 @@ class GraphicalView(object):
             self.screen.blit(entity.surf, entity.rect)
         pygame.display.flip()
 
-    def renderhelp(self):
+    def render_help(self):
         """
         Render the help screen.
         """
@@ -159,7 +125,7 @@ class GraphicalView(object):
         self.screen.blit(somewords, (0, 0))
         pygame.display.flip()
 
-    def rendercast(self, event: InputEvent):
+    def render_cast(self, event: InputEvent):
         """
         Render a spell cast.
         """
@@ -173,7 +139,7 @@ class GraphicalView(object):
             active_palette_item = self.model.palette.get_active_item()
             trajectory = self._compute_trajectory(
                 active_palette_item.get_spell().speed(), 
-                event.clickpos
+                event.click_pos
             )
             distance = math.ceil(
                 active_palette_item.get_spell().distance() * self.meters_to_pixels
@@ -212,7 +178,7 @@ class GraphicalView(object):
                 
             pygame.display.flip()
 
-    def renderpalette(self, event: InputEvent):
+    def render_palette(self, event: InputEvent):
         """
         Render the palette.
         """
@@ -246,19 +212,31 @@ class GraphicalView(object):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, position):
+    """
+    The player sprite class.
+    
+    :param position: the position of the player on the screen.
+    """
+    
+    def __init__(self, position: tuple):
         super(Player, self).__init__()
-        self.surf = pygame.image.load("assets/player.png").convert()
+        self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
+        self.surf = self.sprites[0]
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect(center=position)
+        self.current_sprite = 0
 
     def update(self):
-        pass
+        self.current_sprite += .1
+        if self.current_sprite >= len(self.sprites):
+            self.current_sprite = 0
+        self.surf = self.sprites[int(self.current_sprite)]
 
 
 class Projectile(pygame.sprite.Sprite):
     """
-    A generic projectile class that can be used to create different types of projectiles.
+    A generic projectile sprite class that can be used to 
+    create different types of projectiles.
     """
 
     def __init__(self, trajectory: tuple, distance_in_pixels: int, pos: tuple):
@@ -274,9 +252,7 @@ class Projectile(pygame.sprite.Sprite):
 
     def update(self):
         """
-        Animates the projectile from a list of modifiers. 
-
-        :param modifiers: a dictionary of modifiers for the projectile.
+        Animates the projectile. 
         """
         self.pos += self.trajectory
         self.travel_distance += math.sqrt(
