@@ -3,9 +3,9 @@ import math
 import pygame
 from pygame.locals import RLEACCEL
 
-import model
-from eventmanager import *
-from model import AttributeTracking, SpellAttribute
+from . import model
+from .eventmanager import *
+from .model import AttributeTracking, SpellAttribute
 
 
 class GraphicalView(object):
@@ -102,8 +102,8 @@ class GraphicalView(object):
 
         # Process play game logic
         self.handle_collisions()
-        self.model.character.palette.update_cooldowns(self.clock.get_time())
-        self.model.character.palette.update_casting_time(self.clock.get_time())
+        self.model.character._palette.update_cooldowns(self.clock.get_time())
+        self.model.character._palette.update_casting_time(self.clock.get_time())
         self.all_sprites.update()
 
         # Render the scene
@@ -141,12 +141,12 @@ class GraphicalView(object):
         Render a spell cast.
         """
         
-        if self.model.character.palette.can_cast_active_spell():
+        if self.model.character._palette.can_cast_active_spell():
             
-            self.model.character.palette.reset_casting_time()
+            self.model.character._palette.reset_casting_time()
         
             # Create projectile sprite
-            active_spell = self.model.character.palette.get_active_item().get_spell()
+            active_spell = self.model.character._palette.get_active_item().get_spell()
             radius = math.ceil(active_spell.get_attribute(SpellAttribute.RADIUS) * self.meters_to_pixels)
             color = active_spell.element().color
             trajectory = self._compute_trajectory(
@@ -187,7 +187,7 @@ class GraphicalView(object):
         Render the palette.
         """
         self.screen.fill((0, 0, 0))
-        self.model.character.palette.set_active_palette_item(int(event.char) - 1)
+        self.model.character._palette.set_active_palette_item(int(event.char) - 1)
         self.all_sprites.update()
         for entity in self.all_sprites:
             self.screen.blit(entity.surf, entity.rect)
@@ -229,7 +229,7 @@ class GraphicalView(object):
         self.all_sprites.add(self.player)
         
         # Setting up palette
-        self.palette = Palette(self.model.character.palette)
+        self.palette = Palette(self.model.character._palette)
         self.all_sprites.add(self.palette)
         
         # Setting up dummy enemies
@@ -391,7 +391,7 @@ class Progress(pygame.sprite.Sprite):
         self.surf.fill((123, 123, 123))
         top = 0
         left = 0
-        for spell in self.source.spell_book:
+        for spell in self.source._spell_book:
             text = self.smallfont.render(
                 f"{spell.element().name} Projectile: ", 
                 True, 

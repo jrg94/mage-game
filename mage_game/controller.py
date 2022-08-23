@@ -1,6 +1,8 @@
 import pygame
-import model
-from eventmanager import *
+
+from . import model
+from .eventmanager import *
+
 
 class MouseAndKeyboard:
     """

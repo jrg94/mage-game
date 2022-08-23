@@ -1,7 +1,4 @@
-import eventmanager
-import model
-import view
-import controller
+from mage_game import eventmanager, model, controller, view
 
 def run():
     event_manager = eventmanager.EventManager()

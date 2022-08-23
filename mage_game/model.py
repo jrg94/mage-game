@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Callable
 
-from eventmanager import *
+from .eventmanager import *
 
 # Spell attribute constants
 BASE_SPEED: float = 5.0  # the base speed of the spell in meters per second.
@@ -428,10 +428,10 @@ class Palette:
 class Enemy:
     """
     The Enemy class represents enemy data.
-    
+
     :param _hp: the health of the enemy
     """
-    
+
     _hp: int = 10
 
 
@@ -443,9 +443,9 @@ class Character:
     :param spell_book: the list of spells that that the Character knows.
     :param Palette: a set of spells that the Character can use.
     """
-    
-    spell_book: list[Projectile] = field(default_factory=list)
-    palette: Palette = field(default_factory=Palette)
+
+    _spell_book: list[Projectile] = field(default_factory=list)
+    _palette: Palette = field(default_factory=Palette)
 
     @staticmethod
     def new_character() -> Character:
@@ -455,7 +455,7 @@ class Character:
         :return: an instance of Character populated with defaults.
         """
         character = Character()
-        character.spell_book.extend([
+        character._spell_book.extend([
             Projectile(Element.FIRE),
             Projectile(Element.WATER),
             Projectile(Element.EARTH),
@@ -463,7 +463,7 @@ class Character:
             Projectile(Element.LIGHT),
             Projectile(Element.DARK),
         ])
-        character.palette.get_items().extend([
-            PaletteItem(spell) for spell in character.spell_book[:4]
+        character._palette.get_items().extend([
+            PaletteItem(spell) for spell in character._spell_book[:4]
         ])
         return character
