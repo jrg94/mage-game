@@ -426,6 +426,12 @@ class Palette:
 
 @dataclass
 class Enemy:
+    """
+    The Enemy class represents enemy data.
+    
+    :param _hp: the health of the enemy
+    """
+    
     _hp: int = 10
 
 
