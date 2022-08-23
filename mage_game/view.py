@@ -401,7 +401,7 @@ class Progress(pygame.sprite.Sprite):
             for tracking in spell._attributes.values():
                 top += text.get_height()
                 text = self.smallfont.render(
-                    f"{tracking._attribute.name.title()}: {tracking.effective_value()} {tracking._units} ({tracking.events_to_next_level()} events left)", 
+                    f"{tracking.attribute.name.title()}: {tracking.effective_value()} {tracking._units} ({tracking.events_to_next_level()} events left)", 
                     True, 
                     (255, 255, 255)
                 )

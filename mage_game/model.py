@@ -204,19 +204,22 @@ class AttributeTracking:
     """
     A handy class for tracking spell attributes.
 
-    :param _attribute: the type of attribute to track.
-    :param _base: the base value of the attribute.
+    :param attribute: the type of attribute to track.
+    :param base: the base value of the attribute.
     :param _level: the level of the attribute.
     :param _events: the number of qualifying events to increase the attribute.
     """
 
-    _attribute: SpellAttribute
-    _base: float
+    attribute: SpellAttribute
+    base: float
     _level: int = 1
     _events: int = 0
     _scale: str = "logarithmic"
     _post: Callable = lambda x: x
     _units: str = "m"
+    
+    def level(self):
+        return self._level
 
     def effective_value(self):
         """
@@ -228,9 +231,9 @@ class AttributeTracking:
         :return: the scaled value of the spell attribute.
         """
         if self._scale == "logarithmic":
-            return self._post(math.log(self._level, 2) * self._base + self._base)
+            return self._post(math.log(self._level, 2) * self.base + self.base)
         elif self._scale == "inverse":
-            return self._post(1 / (self._level) * self._base)
+            return self._post(1 / (self._level) * self.base)
 
     def trigger_event(self):
         """
@@ -243,7 +246,7 @@ class AttributeTracking:
             - Level 3 -> 4: Perform 40 events (on top of the previous 30)
         """
         self._events += 1
-        self._level = math.ceil(math.log((self._events // 5) + 2, 2))
+        self._level = int(math.log((self._events // 5) + 2, 2))
 
     def events_to_next_level(self):
         """
@@ -252,7 +255,7 @@ class AttributeTracking:
         can get to the next level.
         """
         next_level = self._level + 1
-        return ((next_level ** 2) - 2) * 5 - self._events
+        return ((2 ** next_level) - 2) * 5 - self._events
 
 
 @dataclass
@@ -272,8 +275,7 @@ class Projectile:
         SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil, _units="hp"),
         SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse", _units="s"),
         SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse", _units="s"),
-        SpellAttribute.CRIT_CHANCE: AttributeTracking(
-            SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
     })
 
     def get_tracking(self, attribute: SpellAttribute) -> AttributeTracking | None:
