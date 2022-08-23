@@ -2,7 +2,7 @@ import math
 
 import pygame
 from pygame.locals import RLEACCEL
-from model import SpellAttribute
+from model import SpellAttribute, AttributeTracking
 
 import model
 from eventmanager import *
@@ -147,10 +147,10 @@ class GraphicalView(object):
         
             # Create projectile sprite
             active_spell = self.model.character.palette.get_active_item().get_spell()
-            radius = math.ceil(active_spell.get_attribute_value(SpellAttribute.RADIUS) * self.meters_to_pixels)
+            radius = math.ceil(active_spell.get_attribute(SpellAttribute.RADIUS) * self.meters_to_pixels)
             color = active_spell.element().color
             trajectory = self._compute_trajectory(
-                active_spell.get_attribute_value(SpellAttribute.SPEED),
+                active_spell.get_attribute(SpellAttribute.SPEED),
                 event.click_pos
             )
             projectile = Projectile(
@@ -198,8 +198,10 @@ class GraphicalView(object):
             enemies: list[pygame.sprite.Sprite] = pygame.sprite.spritecollide(attack, self.enemies, False)
             for enemy in enemies:
                 if enemy not in attack.hit:
+                    damage: AttributeTracking = attack.source.get_tracking(SpellAttribute.DAMAGE)
+                    damage.trigger_event()
                     attack.hit.append(enemy)
-                    enemy.hit(attack.source.get_attribute_value(SpellAttribute.DAMAGE))
+                    enemy.hit(damage.effective_value())
         pygame.display.flip()
 
     def initialize(self):
@@ -306,8 +308,8 @@ class Projectile(pygame.sprite.Sprite):
     def __init__(self, source: model.Projectile, trajectory: tuple, pos: tuple, meters_to_pixels: int):
         super(Projectile, self).__init__()
         self.surf = pygame.Surface((
-            source.get_attribute_value(SpellAttribute.RADIUS) * meters_to_pixels * 2, 
-            source.get_attribute_value(SpellAttribute.RADIUS) * meters_to_pixels * 2
+            source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2, 
+            source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2
         ))
         self.surf.fill((255, 255, 255))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -315,7 +317,7 @@ class Projectile(pygame.sprite.Sprite):
         self.source = source
         self.pos = pygame.Vector2(pos)
         self.trajectory = pygame.Vector2(trajectory)
-        self.distance_in_pixels: int = self.source.get_attribute_value(SpellAttribute.DISTANCE) * meters_to_pixels
+        self.distance_in_pixels: int = self.source.get_attribute(SpellAttribute.DISTANCE) * meters_to_pixels
         self.travel_distance: float = 0
         self.start_time: float = pygame.time.get_ticks()
         self.hit = []
@@ -324,7 +326,7 @@ class Projectile(pygame.sprite.Sprite):
         """
         Animates the projectile. 
         """
-        if pygame.time.get_ticks() - self.start_time > self.source.get_attribute_value(SpellAttribute.CAST_TIME) * 1000:
+        if pygame.time.get_ticks() - self.start_time > self.source.get_attribute(SpellAttribute.CAST_TIME) * 1000:
             self.pos += self.trajectory
             self.travel_distance += math.sqrt(self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
             self.rect.center = self.pos
@@ -362,7 +364,7 @@ class Palette(pygame.sprite.Sprite):
                 )
             # Show cast time 
             if self.source.get_remaining_casting_time() > 0:
-                ratio = self.source.get_remaining_casting_time() / (active_spell.get_attribute_value(SpellAttribute.CAST_TIME) * 1000)
+                ratio = self.source.get_remaining_casting_time() / (active_spell.get_attribute(SpellAttribute.CAST_TIME) * 1000)
                 pygame.draw.rect(
                     self.surf,
                     (155, 155, 155, 100),
@@ -396,10 +398,10 @@ class Progress(pygame.sprite.Sprite):
                 (255, 255, 255)
             )
             self.surf.blit(text, (left, top))
-            for attribute in spell._attributes.values():
+            for tracking in spell._attributes.values():
                 top += text.get_height()
                 text = self.smallfont.render(
-                    f"{attribute._attribute.name}: {attribute.effective_value()} {attribute._units}", 
+                    f"{tracking._attribute.name.title()}: {tracking.effective_value()} {tracking._units} ({tracking.events_to_next_level()} events left)", 
                     True, 
                     (255, 255, 255)
                 )
