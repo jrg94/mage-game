@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -159,13 +161,13 @@ class SpellAttribute(Enum):
     depend on SpellAttribute can implement simple methods that
     can look up attributes by enum, rather than hardcoding attribute
     methods for every type of attribute.
-    
+
     .. note::
        It is very important that spells using SpellAttribute follow
        the units outlined in the docs below. The units used in the
        view may be different, so pay attention to when conversions
        are needed.
-    
+
     :member DAMAGE: damage refers to the damage of a spell in hp.
        This does not necessarily mean an enemy will take that exact 
        amount of damage due to resistances, but it should give a
@@ -186,14 +188,14 @@ class SpellAttribute(Enum):
     :member SPEED: speed refers to the travel speed of a spell in
        meters per second.
     """
-    
+
     DAMAGE = auto()
     CRIT_CHANCE = auto()
     CRIT_DAMAGE = auto()
     COOLDOWN = auto()
     CAST_TIME = auto()
     DISTANCE = auto()
-    RADIUS  = auto()
+    RADIUS = auto()
     SPEED = auto()
 
 
@@ -201,13 +203,13 @@ class SpellAttribute(Enum):
 class AttributeTracking:
     """
     A handy class for tracking spell attributes.
-    
+
     :param _attribute: the type of attribute to track.
     :param _base: the base value of the attribute.
     :param _level: the level of the attribute.
     :param _events: the number of qualifying events to increase the attribute.
     """
-    
+
     _attribute: SpellAttribute
     _base: float
     _level: int = 1
@@ -215,7 +217,7 @@ class AttributeTracking:
     _scale: str = "logarithmic"
     _post: Callable = lambda x: x
     _units: str = "m"
-    
+
     def effective_value(self):
         """
         A helper function that scales a value based on a base value.
@@ -229,20 +231,20 @@ class AttributeTracking:
             return self._post(math.log(self._level, 2) * self._base + self._base)
         elif self._scale == "inverse":
             return self._post(1 / (self._level) * self._base)
-        
+
     def trigger_event(self):
         """
         Call this method when a player meets the requirements to trigger an event.
         Events are used to level up abilities. The current scaling of abilities
         works on the doubling principle on increments of 10:
-        
+
             - Level 1 -> 2: Perform 10 events
             - Level 2 -> 3: Perform 20 events (on top of the original 10)
             - Level 3 -> 4: Perform 40 events (on top of the previous 30)
         """
         self._events += 1
         self._level = math.ceil(math.log((self._events // 5) + 2, 2))
-        
+
     def events_to_next_level(self):
         """
         A handy function for computing the inverse of the level function. 
@@ -270,22 +272,23 @@ class Projectile:
         SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil, _units="hp"),
         SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse", _units="s"),
         SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse", _units="s"),
-        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(
+            SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
     })
 
     def get_tracking(self, attribute: SpellAttribute) -> AttributeTracking | None:
         """
         Retrieves an attribute based on the enum.
-        
+
         :param attribute: a spell attribute enum used for differentiating spell attributes.
         :return: the attribute or None
         """
         return self._attributes.get(attribute)
-    
+
     def get_attribute(self, attribute: SpellAttribute) -> float:
         """
         Retrieves the value of an attribute.
-        
+
         :param attribute: a spell attribute enum used for differentiating spell attributes.
         :return: the value of the attribute
         """
@@ -407,29 +410,44 @@ class Palette:
         :param index: the index of the spell in the palette.
         """
         self._current_item_index = index
-        
+
     def reset_casting_time(self) -> None:
-        self._casting_time = self.get_active_item().get_spell().get_attribute(SpellAttribute.CAST_TIME) * 1000
-        
+        self._casting_time = self.get_active_item().get_spell(
+        ).get_attribute(SpellAttribute.CAST_TIME) * 1000
+
     def update_casting_time(self, dt) -> None:
         self._casting_time -= dt
         if self._casting_time <= 0:
             self._casting_time == 0
-            
+
     def get_remaining_casting_time(self) -> int:
         return self._casting_time
-    
+
+
 @dataclass
 class Enemy:
     _hp: int = 10
-    
+
+
 @dataclass
 class Character:
+    """
+    The Character class represents the character data.
+
+    :param spell_book: the list of spells that that the Character knows.
+    :param Palette: a set of spells that the Character can use.
+    """
+    
     spell_book: list[Projectile] = field(default_factory=list)
     palette: Palette = field(default_factory=Palette)
-    
+
     @staticmethod
-    def new_character():
+    def new_character() -> Character:
+        """
+        Generates an instance of Character for new players.
+
+        :return: an instance of Character populated with defaults.
+        """
         character = Character()
         character.spell_book.extend([
             Projectile(Element.FIRE),
