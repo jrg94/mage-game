@@ -204,10 +204,13 @@ class AttributeTracking:
     """
     A handy class for tracking spell attributes.
 
-    :param attribute: the type of attribute to track.
-    :param base: the base value of the attribute.
-    :param _level: the level of the attribute.
-    :param _events: the number of qualifying events to increase the attribute.
+    :param SpellAttribute attribute: the type of attribute to track.
+    :param float base: the base value of the attribute.
+    :param int _level: the level of the attribute.
+    :param int _events: the number of qualifying events to increase the attribute.
+    :param str _scale: the function used for scaling.
+    :param Callable _post: a function that can be used to post process the data.
+    :param str _units: the units of the attribute.
     """
 
     attribute: SpellAttribute
@@ -217,11 +220,16 @@ class AttributeTracking:
     _scale: str = "logarithmic"
     _post: Callable = lambda x: x
     _units: str = "m"
-    
-    def level(self):
+
+    def level(self) -> int:
+        """
+        Retrieves the current level of this attribute.
+
+        :return: the level of the attribute as an integer.
+        """
         return self._level
 
-    def effective_value(self):
+    def effective_value(self) -> float:
         """
         A helper function that scales a value based on a base value.
         The effective value can be computed in a variety of ways. Typically,
@@ -235,7 +243,7 @@ class AttributeTracking:
         elif self._scale == "inverse":
             return self._post(1 / (self._level) * self.base)
 
-    def trigger_event(self):
+    def trigger_event(self) -> None:
         """
         Call this method when a player meets the requirements to trigger an event.
         Events are used to level up abilities. The current scaling of abilities
@@ -248,11 +256,13 @@ class AttributeTracking:
         self._events += 1
         self._level = int(math.log((self._events // 5) + 2, 2))
 
-    def events_to_next_level(self):
+    def events_to_next_level(self) -> int:
         """
         A handy function for computing the inverse of the level function. 
         This will tell you how many more events you must trigger before you
         can get to the next level.
+
+        :return: the number of events need to reach the next level.
         """
         next_level = self._level + 1
         return ((2 ** next_level) - 2) * 5 - self._events
@@ -275,7 +285,8 @@ class Projectile:
         SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil, _units="hp"),
         SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse", _units="s"),
         SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse", _units="s"),
-        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(
+            SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
     })
 
     def get_tracking(self, attribute: SpellAttribute) -> AttributeTracking | None:
