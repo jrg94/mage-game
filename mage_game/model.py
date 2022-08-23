@@ -160,15 +160,31 @@ class SpellAttribute(Enum):
     can look up attributes by enum, rather than hardcoding attribute
     methods for every type of attribute.
     
+    .. note::
+       It is very important that spells using SpellAttribute follow
+       the units outlined in the docs below. The units used in the
+       view may be different, so pay attention to when conversions
+       are needed.
+    
     :member DAMAGE: damage refers to the damage of a spell in hp.
-        This does not necessarily mean an enemy will take that exact 
-        amount of damage due to resistances, but it should give a
-        rough max damage.
+       This does not necessarily mean an enemy will take that exact 
+       amount of damage due to resistances, but it should give a
+       rough max damage.
     :member CRIT_CHANCE: crit chance refers to the likelihood of
-        a critical hit occuring as a ratio (e.g., .05). Critical
-        hits are scaled by CRIT_DAMAGE.
+       a critical hit occuring as a ratio (e.g., .05). Critical
+       hits are scaled by CRIT_DAMAGE.
     :member CRIT_DAMAGE: crit damage refers to the ratio of 
-        DAMAGE to increase a hit by (e.g., .5). 
+       DAMAGE to increase a hit by (e.g., .5).
+    :member COOLDOWN: cooldown refers to the time the player
+       has to wait in seconds before they can cast the spell 
+       again.
+    :member CAST_TIME: cast time refers to the amount of time it
+       takes to charge up a spell in seconds. 
+    :member DISTANCE: distance refers to the distance that a spell
+       travels in meters.
+    :member RADIUS: radius refers to the size of a spell in meters.
+    :member SPEED: speed refers to the travel speed of a spell in
+       meters per second.
     """
     
     DAMAGE = auto()
