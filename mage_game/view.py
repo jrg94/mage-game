@@ -2,10 +2,10 @@ import math
 
 import pygame
 from pygame.locals import RLEACCEL
-from model import SpellAttribute, AttributeTracking
 
 import model
 from eventmanager import *
+from model import AttributeTracking, SpellAttribute
 
 
 class GraphicalView(object):

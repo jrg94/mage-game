@@ -5,7 +5,6 @@ from typing import Callable
 
 from eventmanager import *
 
-
 # Spell attribute constants
 BASE_SPEED: float = 5.0  # the base speed of the spell in meters per second.
 BASE_RADIUS: float = .25  # the base radius of the spell in meters.
@@ -152,8 +151,29 @@ class Element(Enum):
 
 
 class SpellAttribute(Enum):
+    """
+    SpellAttribute is an enum class that is meant to represent
+    the different types of attributes a spell may have. I 
+    specifically created this class to ensure that new attributes
+    could be easily added at a later date. Then, classes that
+    depend on SpellAttribute can implement simple methods that
+    can look up attributes by enum, rather than hardcoding attribute
+    methods for every type of attribute.
+    
+    :member DAMAGE: damage refers to the damage of a spell in hp.
+        This does not necessarily mean an enemy will take that exact 
+        amount of damage due to resistances, but it should give a
+        rough max damage.
+    :member CRIT_CHANCE: crit chance refers to the likelihood of
+        a critical hit occuring as a ratio (e.g., .05). Critical
+        hits are scaled by CRIT_DAMAGE.
+    :member CRIT_DAMAGE: crit damage refers to the ratio of 
+        DAMAGE to increase a hit by (e.g., .5). 
+    """
+    
     DAMAGE = auto()
     CRIT_CHANCE = auto()
+    CRIT_DAMAGE = auto()
     COOLDOWN = auto()
     CAST_TIME = auto()
     DISTANCE = auto()
