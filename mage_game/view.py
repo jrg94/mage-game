@@ -50,18 +50,18 @@ class GraphicalView(object):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
-            if currentstate == model.STATE_MENU:
+            if currentstate == model.GameState.STATE_MENU:
                 self.render_menu()
-            if currentstate == model.STATE_PLAY:
+            if currentstate == model.GameState.STATE_PLAY:
                 self.render_play()
-            if currentstate == model.STATE_HELP:
+            if currentstate == model.GameState.STATE_HELP:
                 self.render_help()
             self.clock.tick(self.fps)
         elif isinstance(event, InputEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
-            if currentstate == model.STATE_PLAY:
+            if currentstate == model.GameState.STATE_PLAY:
                 if event.click_pos and event.button == "left":
                     self.render_cast(event)
                 if event.char and event.char in "1234":

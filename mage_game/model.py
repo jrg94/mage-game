@@ -8,13 +8,12 @@ from typing import Callable
 from .eventmanager import *
 
 
-
-# State machine constants for the StateMachine class below
-STATE_INTRO = 1
-STATE_MENU = 2
-STATE_HELP = 3
-STATE_ABOUT = 4
-STATE_PLAY = 5
+class GameState(Enum):
+    STATE_INTRO = auto()
+    STATE_MENU = auto()
+    STATE_HELP = auto()
+    STATE_ABOUT = auto()
+    STATE_PLAY = auto()
 
 
 class GameEngine:
@@ -61,7 +60,7 @@ class GameEngine:
         """
         self.running = True
         self.event_manager.Post(InitializeEvent())
-        self.state.push(STATE_MENU)
+        self.state.push(GameState.STATE_MENU)
         while self.running:
             newTick = TickEvent()
             self.event_manager.Post(newTick)
