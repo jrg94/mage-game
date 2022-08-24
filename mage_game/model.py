@@ -7,15 +7,7 @@ from typing import Callable
 
 from .eventmanager import *
 
-# Spell attribute constants
-# TODO: incorporate this directly in the enum
-BASE_SPEED: float = 5.0  # the base speed of the spell in meters per second.
-BASE_RADIUS: float = .25  # the base radius of the spell in meters.
-BASE_DISTANCE: float = 10.0  # the base distance of the spell in meters.
-BASE_DAMAGE: int = 1  # the base damage of the spell in hit points.
-BASE_COOLDOWN: float = 2.0  # the base cooldown of the spell in seconds.
-BASE_CAST_TIME: float = 2.0  # the base cast time of the spell in seconds.
-BASE_CRIT_CHANCE: float = .05  # the base chance of a critical hit.
+
 
 # State machine constants for the StateMachine class below
 STATE_INTRO = 1
@@ -190,15 +182,29 @@ class SpellAttribute(Enum):
        meters per second.
     """
 
-    DAMAGE = auto()
-    CRIT_CHANCE = auto()
-    CRIT_DAMAGE = auto()
-    COOLDOWN = auto()
-    CAST_TIME = auto()
-    DISTANCE = auto()
-    RADIUS = auto()
-    SPEED = auto()
+    DAMAGE = auto(), 1
+    CRIT_CHANCE = auto(), .05
+    CRIT_DAMAGE = auto(), .25
+    COOLDOWN = auto(), 2.0
+    CAST_TIME = auto(), 2.0
+    DISTANCE = auto(), 10.0
+    RADIUS = auto(), .25
+    SPEED = auto(), 5.0
+    
+    def __new__(cls, *args, **kwargs):
+        obj = object.__new__(cls)
+        obj._value_ = args[0]
+        return obj
 
+    def __init__(self, _: int, base: float = 1):
+        self._base = base
+        
+    def __str__(self):
+        return self.value
+    
+    @property
+    def base_value(self) -> float:
+        return self._base
 
 @dataclass
 class AttributeTracking:
@@ -206,7 +212,6 @@ class AttributeTracking:
     A handy class for tracking spell attributes.
 
     :param SpellAttribute attribute: the type of attribute to track.
-    :param float base: the base value of the attribute.
     :param int _level: the level of the attribute.
     :param int _events: the number of qualifying events to increase the attribute.
     :param str _scale: the function used for scaling.
@@ -215,7 +220,6 @@ class AttributeTracking:
     """
 
     attribute: SpellAttribute
-    base: float
     _level: int = 1
     _events: int = 0
     _scale: str = "logarithmic"
@@ -240,9 +244,9 @@ class AttributeTracking:
         :return: the scaled value of the spell attribute.
         """
         if self._scale == "logarithmic":
-            return self._post(math.log(self._level, 2) * self.base + self.base)
+            return self._post(math.log(self._level, 2) * self.attribute.base_value + self.attribute.base_value)
         elif self._scale == "inverse":
-            return self._post(1 / (self._level) * self.base)
+            return self._post(1 / (self._level) * self.attribute.base_value)
 
     def trigger_event(self) -> None:
         """
@@ -280,14 +284,13 @@ class Projectile:
 
     _element: Element = Element.NONE
     _attributes: dict[SpellAttribute: AttributeTracking] = field(default_factory=lambda: {
-        SpellAttribute.SPEED: AttributeTracking(SpellAttribute.SPEED, BASE_SPEED, _units="m/s"),
-        SpellAttribute.RADIUS: AttributeTracking(SpellAttribute.RADIUS, BASE_RADIUS),
-        SpellAttribute.DISTANCE: AttributeTracking(SpellAttribute.DISTANCE, BASE_DISTANCE),
-        SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, BASE_DAMAGE, _post=math.ceil, _units="hp"),
-        SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, BASE_COOLDOWN, _scale="inverse", _units="s"),
-        SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, BASE_CAST_TIME, _scale="inverse", _units="s"),
-        SpellAttribute.CRIT_CHANCE: AttributeTracking(
-            SpellAttribute.CRIT_CHANCE, BASE_CRIT_CHANCE, _units="%")
+        SpellAttribute.SPEED: AttributeTracking(SpellAttribute.SPEED, _units="m/s"),
+        SpellAttribute.RADIUS: AttributeTracking(SpellAttribute.RADIUS),
+        SpellAttribute.DISTANCE: AttributeTracking(SpellAttribute.DISTANCE),
+        SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, _post=math.ceil, _units="hp"),
+        SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, _scale="inverse", _units="s"),
+        SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, _scale="inverse", _units="s"),
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, _units="%")
     })
 
     def get_tracking(self, attribute: SpellAttribute) -> AttributeTracking | None:
