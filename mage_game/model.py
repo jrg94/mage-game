@@ -8,6 +8,7 @@ from typing import Callable
 from .eventmanager import *
 
 # Spell attribute constants
+# TODO: incorporate this directly in the enum
 BASE_SPEED: float = 5.0  # the base speed of the spell in meters per second.
 BASE_RADIUS: float = .25  # the base radius of the spell in meters.
 BASE_DISTANCE: float = 10.0  # the base distance of the spell in meters.
@@ -406,7 +407,10 @@ class Palette:
         Resets the cooldown of the currently active spell.
         """
         self.get_active_item().reset_cooldown(
-            self.get_active_item().get_spell().cooldown() * 1000)
+            self.get_active_item()
+                .get_spell()
+                .get_attribute(SpellAttribute.COOLDOWN) * 1000
+        )
 
     def get_items(self) -> list[PaletteItem]:
         """
@@ -425,8 +429,13 @@ class Palette:
         self._current_item_index = index
 
     def reset_casting_time(self) -> None:
-        self._casting_time = self.get_active_item().get_spell(
-        ).get_attribute(SpellAttribute.CAST_TIME) * 1000
+        """
+        Sets the casting time to its effective value. Use when
+        a spell is cast.
+        """
+        self._casting_time = self.get_active_item() \
+            .get_spell() \
+            .get_attribute(SpellAttribute.CAST_TIME) * 1000
 
     def update_casting_time(self, dt) -> None:
         self._casting_time -= dt
@@ -480,3 +489,22 @@ class Character:
             PaletteItem(spell) for spell in character._spell_book[:4]
         ])
         return character
+    
+    def cast(self) -> bool:
+        """
+        Attempts to cast the currently active spell.
+        Returns True if the cast was successful.
+        
+        .. note::
+           Casting does not actually do anything. It just manages
+           the underlying state in an expected way (e.g., 
+           checking if casting is possible, resetting cooldowns, etc.). 
+           The view should handle the launching of the projectile. 
+           
+        :return: True if the cast was successful; False otherwise
+        """
+        if self._palette.can_cast_active_spell():
+            self._palette.reset_active_spell_cooldown()
+            self._palette.reset_casting_time()
+            return True
+        return False
