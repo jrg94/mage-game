@@ -359,8 +359,9 @@ class Palette:
     """
     Represents the game palette.
 
-    :param list[PaletteItem] items: the list of spells in the palette.
-    :param int current_spell_index: the index of the active spell in the palette.
+    :param list[PaletteItem] _items: the list of spells in the palette.
+    :param int _current_spell_index: the index of the active spell in the palette.
+    :param int _casting_time: the amount of time it takes to finish casting a spell in milliseconds
     """
 
     _items: list[PaletteItem] = field(default_factory=list)
@@ -438,11 +439,22 @@ class Palette:
             .get_attribute(SpellAttribute.CAST_TIME) * 1000
 
     def update_casting_time(self, dt) -> None:
+        """
+        Takes some change in time and removes it from the current casting
+        time. Forces casting time to zero if value drops below zero.
+
+        :param dt: the change in time since the last time this method was called
+        """
         self._casting_time -= dt
         if self._casting_time <= 0:
             self._casting_time == 0
 
     def get_remaining_casting_time(self) -> int:
+        """
+        Computes the remaining time spent casting a spell.
+
+        :return: the time left to cast a spell in milliseconds
+        """
         return self._casting_time
 
 
