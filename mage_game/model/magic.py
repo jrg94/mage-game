@@ -192,8 +192,7 @@ class Projectile:
         SpellAttribute.DAMAGE: AttributeTracking(SpellAttribute.DAMAGE, _post=math.ceil, _units="hp"),
         SpellAttribute.COOLDOWN: AttributeTracking(SpellAttribute.COOLDOWN, _scale="inverse", _units="s"),
         SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, _scale="inverse", _units="s"),
-        SpellAttribute.CRIT_CHANCE: AttributeTracking(
-            SpellAttribute.CRIT_CHANCE, _units="%")
+        SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, _units="%")
     })
 
     def get_tracking(self, attribute: SpellAttribute) -> AttributeTracking | None:
