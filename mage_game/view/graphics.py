@@ -28,7 +28,7 @@ class GraphicalView(object):
         self.player = None
         self.palette = None
         self.attacks = None
-        self.all_sprites = None
+        self.play_sprites = None
         self.enemies = None
         self.help = None
 
@@ -103,7 +103,7 @@ class GraphicalView(object):
         self.handle_collisions()
         self.model.character._palette.update_cooldowns(self.clock.get_time())
         self.model.character._palette.update_casting_time(self.clock.get_time())
-        self.all_sprites.update()
+        self.play_sprites.update()
 
         # Render the scene
         self.screen.fill((0, 0, 0))
@@ -116,9 +116,7 @@ class GraphicalView(object):
             somewords,
             (0, self.screen.get_height() - somewords.get_height())
         )
-        for entity in self.all_sprites:
-            self.screen.blit(entity.surf, entity.rect)
-
+        self.play_sprites.draw(self.screen)
         pygame.display.flip()
 
     def render_help(self):
@@ -132,7 +130,7 @@ class GraphicalView(object):
             True, (0, 255, 0))
         self.screen.blit(somewords, (0, 0))
         self.help.update()
-        self.screen.blit(self.help.surf, self.help.rect)
+        self.screen.blit(self.help.image, self.help.rect)
         pygame.display.flip()
 
     def render_cast(self, event: InputEvent):
@@ -158,25 +156,24 @@ class GraphicalView(object):
             )
 
             # Set starting position
-            projectile.rect = projectile.surf.get_rect(
+            projectile.rect = projectile.image.get_rect(
                 center=self.player.rect.center)
 
             # Draw projectile
             pygame.draw.circle(
-                projectile.surf,
+                projectile.image,
                 color,
-                projectile.surf.get_rect().center,
+                projectile.image.get_rect().center,
                 radius
             )
 
             # Add projectile to sprite group
             self.attacks.add(projectile)
-            self.all_sprites.add(projectile)
+            self.play_sprites.add(projectile)
 
             # Render sprites
-            self.all_sprites.update()
-            for entity in self.all_sprites:
-                self.screen.blit(entity.surf, entity.rect)
+            self.play_sprites.update()
+            self.play_sprites.draw(self.screen)
 
             pygame.display.flip()
 
@@ -187,9 +184,8 @@ class GraphicalView(object):
         self.screen.fill((0, 0, 0))
         self.model.character._palette.set_active_palette_item(
             int(event.char) - 1)
-        self.all_sprites.update()
-        for entity in self.all_sprites:
-            self.screen.blit(entity.surf, entity.rect)
+        self.play_sprites.update()
+        self.play_sprites.draw(self.screen)
         pygame.display.flip()
 
     def handle_collisions(self):
@@ -220,30 +216,30 @@ class GraphicalView(object):
         self.smallfont = pygame.font.Font(None, 40)
 
         # Create sprite groups
-        self.all_sprites = pygame.sprite.Group()
+        self.play_sprites = pygame.sprite.Group()
         self.attacks = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
 
         # Setting up player
         self.player = PlayerSprite()
-        self.player.rect = self.player.surf.get_rect(
+        self.player.rect = self.player.image.get_rect(
             center=self.screen.get_rect().center)
-        self.all_sprites.add(self.player)
+        self.play_sprites.add(self.player)
 
         # Setting up palette
         self.palette = PaletteSprite(self.model.character._palette)
-        self.all_sprites.add(self.palette)
+        self.play_sprites.add(self.palette)
 
         # Setting up dummy enemies
         for enemy in self.model.enemies:
             dummy = DummySprite(enemy)
-            dummy.rect = dummy.surf.get_rect(center=(400, 400))
+            dummy.rect = dummy.image.get_rect(center=(400, 400))
             self.enemies.add(dummy)
-            self.all_sprites.add(dummy)
+            self.play_sprites.add(dummy)
 
         # Setting up help screen
         self.help = ProgressSprite(self.model.character)
-        self.help.rect = self.help.surf.get_rect(
+        self.help.rect = self.help.image.get_rect(
             center=self.screen.get_rect().center)
 
         # Declaring the view initialized

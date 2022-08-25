@@ -11,27 +11,26 @@ class PlayerSprite(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__()
-        self.sprites = [pygame.image.load(
-            f'assets/player{i}.png') for i in range(1, 3)]
-        self.surf = self.sprites[0]
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect()
+        self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
+        self.image = self.sprites[0]
+        self.image.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.image.get_rect()
         self.current_sprite = 0
 
     def update(self):
         self.current_sprite += .1
         if self.current_sprite >= len(self.sprites):
             self.current_sprite = 0
-        self.surf = self.sprites[int(self.current_sprite)]
+        self.image = self.sprites[int(self.current_sprite)]
 
 
 class DummySprite(pygame.sprite.Sprite):
 
     def __init__(self, source: Enemy):
         super().__init__()
-        self.surf = pygame.Surface((50, 50))
-        self.surf.fill((123, 0, 123))
-        self.rect = self.surf.get_rect()
+        self.image = pygame.Surface((50, 50))
+        self.image.fill((123, 0, 123))
+        self.rect = self.image.get_rect()
         self.source = source
         self.smallfont = pygame.font.Font(None, 40)
         self.last_hit: int | None = None
@@ -46,7 +45,7 @@ class DummySprite(pygame.sprite.Sprite):
 
     def update(self):
         if self.last_hit:
-            self.surf.fill((123, 0, 123))
+            self.image.fill((123, 0, 123))
             damage = self.smallfont.render(
                 str(self.last_hit), True, (255, 0, 0))
             text_surface = pygame.Surface((50, 50))
@@ -55,8 +54,8 @@ class DummySprite(pygame.sprite.Sprite):
             text_surface.blit(damage, damage.get_rect(
                 center=text_surface.get_rect().center))
             text_surface.set_alpha(self.alpha)
-            self.surf.blit(text_surface, text_surface.get_rect(
-                center=self.surf.get_rect().center))
+            self.image.blit(text_surface, text_surface.get_rect(
+                center=self.image.get_rect().center))
             self.alpha //= 1.1
 
 
@@ -68,13 +67,13 @@ class ProjectileSprite(pygame.sprite.Sprite):
 
     def __init__(self, source: Projectile, trajectory: tuple, pos: tuple, meters_to_pixels: int):
         super().__init__()
-        self.surf = pygame.Surface((
+        self.image = pygame.Surface((
             source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2,
             source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2
         ))
-        self.surf.fill((255, 255, 255))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect(center=pos)
+        self.image.fill((255, 255, 255))
+        self.image.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.image.get_rect(center=pos)
         self.source = source
         self.pos = pygame.Vector2(pos)
         self.trajectory = pygame.Vector2(trajectory)
@@ -100,19 +99,19 @@ class ProjectileSprite(pygame.sprite.Sprite):
 class PaletteSprite(pygame.sprite.Sprite):
     def __init__(self, source: Palette):
         super().__init__()
-        self.surf = pygame.Surface((200, 50))
-        self.rect = self.surf.get_rect()
+        self.image = pygame.Surface((200, 50))
+        self.rect = self.image.get_rect()
         self.source: Palette = source
 
     def update(self):
         left = 0
-        self.surf.fill((0, 0, 0))
+        self.image.fill((0, 0, 0))
         active_spell = self.source.get_active_item().get_spell()
         for i, item in enumerate(self.source.get_items()):
             # Draw green square for active item
             if i == self.source.get_active_item_index():
                 pygame.draw.rect(
-                    self.surf,
+                    self.image,
                     (0, 255, 0),
                     (left, 0, 50, 50),
                     width=2
@@ -120,7 +119,7 @@ class PaletteSprite(pygame.sprite.Sprite):
             # Draw white square otherwise
             else:
                 pygame.draw.rect(
-                    self.surf,
+                    self.image,
                     (255, 255, 255),
                     (left, 0, 50, 50),
                     width=2
@@ -130,13 +129,13 @@ class PaletteSprite(pygame.sprite.Sprite):
                 ratio = self.source.get_remaining_casting_time(
                 ) / (active_spell.get_attribute(SpellAttribute.CAST_TIME) * 1000)
                 pygame.draw.rect(
-                    self.surf,
+                    self.image,
                     (155, 155, 155, 100),
                     (left + 2, 2, 46, 46 * ratio)
                 )
             # Add colored circle to square
             pygame.draw.circle(
-                self.surf,
+                self.image,
                 item.get_spell().element().color,
                 (left + 25, 25),
                 10
@@ -147,13 +146,13 @@ class PaletteSprite(pygame.sprite.Sprite):
 class ProgressSprite(pygame.sprite.Sprite):
     def __init__(self, source: state.Character):
         super().__init__()
-        self.surf = pygame.Surface((600, 400))
-        self.rect = self.surf.get_rect()
+        self.image = pygame.Surface((600, 400))
+        self.rect = self.image.get_rect()
         self.source: state.Character = source
         self.smallfont = pygame.font.Font(None, 24)
 
     def update(self):
-        self.surf.fill((123, 123, 123))
+        self.image.fill((123, 123, 123))
         top = 0
         left = 0
         for spell in self.source._spell_book:
@@ -162,7 +161,7 @@ class ProgressSprite(pygame.sprite.Sprite):
                 True,
                 (255, 255, 255)
             )
-            self.surf.blit(text, (left, top))
+            self.image.blit(text, (left, top))
             for tracking in spell._attributes.values():
                 top += text.get_height()
                 text = self.smallfont.render(
@@ -170,7 +169,7 @@ class ProgressSprite(pygame.sprite.Sprite):
                     True,
                     (255, 255, 255)
                 )
-                self.surf.blit(text, (left + 10, top))
+                self.image.blit(text, (left + 10, top))
             top += text.get_height()
             if top + len(spell._attributes.values()) * text.get_height() > 400:
                 left += 300
