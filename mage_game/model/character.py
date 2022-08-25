@@ -15,7 +15,7 @@ class PaletteItem:
     """
 
     _spell: Projectile = field(default_factory=Projectile)
-    _cooldown: float = 0.0
+    _cooldown: float = 0
 
     def can_use(self) -> bool:
         """
@@ -23,7 +23,7 @@ class PaletteItem:
 
         :return: True if the palette item is ready to be used.
         """
-        return self._cooldown <= 0.0
+        return self._cooldown <= 0
 
     def reset_cooldown(self) -> None:
         """
@@ -132,7 +132,7 @@ class Palette:
         """
         self._casting_time -= dt
         if self._casting_time <= 0:
-            self._casting_time == 0
+            self._casting_time = 0
 
     def get_remaining_casting_time(self) -> int:
         """
@@ -202,4 +202,4 @@ class Character:
            
         :return: True if the cast was successful; False otherwise
         """
-        self._palette.cast_active_spell()
+        return self._palette.cast_active_spell()

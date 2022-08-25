@@ -102,8 +102,7 @@ class GraphicalView(object):
         # Process play game logic
         self.handle_collisions()
         self.model.character._palette.update_cooldowns(self.clock.get_time())
-        self.model.character._palette.update_casting_time(
-            self.clock.get_time())
+        self.model.character._palette.update_casting_time(self.clock.get_time())
         self.all_sprites.update()
 
         # Render the scene
@@ -140,10 +139,7 @@ class GraphicalView(object):
         """
         Render a spell cast.
         """
-
-        if self.model.character._palette.can_cast_active_spell():
-
-            self.model.character._palette.reset_casting_time()
+        if self.model.character.cast():
 
             # Create projectile sprite
             active_spell = self.model.character._palette.get_active_item().get_spell()
