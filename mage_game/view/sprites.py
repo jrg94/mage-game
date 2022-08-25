@@ -3,13 +3,13 @@ from pygame import RLEACCEL
 
 from ..model import *
 
-class Player(pygame.sprite.Sprite):
+class PlayerSprite(pygame.sprite.Sprite):
     """
     The player sprite class.
     """
     
     def __init__(self):
-        super(Player, self).__init__()
+        super().__init__()
         self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
         self.surf = self.sprites[0]
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
         self.surf = self.sprites[int(self.current_sprite)]
         
         
-class Dummy(pygame.sprite.Sprite):
+class DummySprite(pygame.sprite.Sprite):
     
     def __init__(self, source: Enemy):
         super().__init__()

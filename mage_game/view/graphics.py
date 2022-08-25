@@ -229,7 +229,7 @@ class GraphicalView(object):
         self.enemies = pygame.sprite.Group()
 
         # Setting up player
-        self.player = Player()
+        self.player = PlayerSprite()
         self.player.rect = self.player.surf.get_rect(
             center=self.screen.get_rect().center)
         self.all_sprites.add(self.player)
@@ -240,7 +240,7 @@ class GraphicalView(object):
 
         # Setting up dummy enemies
         for enemy in self.model.enemies:
-            dummy = Dummy(enemy)
+            dummy = DummySprite(enemy)
             dummy.rect = dummy.surf.get_rect(center=(400, 400))
             self.enemies.add(dummy)
             self.all_sprites.add(dummy)
