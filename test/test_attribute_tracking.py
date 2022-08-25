@@ -1,17 +1,17 @@
 import math
 
-from mage_game import model
+from mage_game.model import AttributeTracking, SpellAttribute
 
 
 def test_tracking_level_1():
-    tracking = model.AttributeTracking(model.SpellAttribute.DISTANCE)
+    tracking = AttributeTracking(SpellAttribute.DISTANCE)
     assert tracking.level() == 1, "Default level should be 1"
     assert tracking.effective_value() == 10, "Provided distance should be 10: log2(1) * 10 + 10"
     assert tracking.events_to_next_level() == 10, "Default event count should be 10: ((2 ^ 2) - 2) * 5 - 0"
 
 
 def test_tracking_level_2():
-    tracking = model.AttributeTracking(model.SpellAttribute.DISTANCE)
+    tracking = AttributeTracking(SpellAttribute.DISTANCE)
     while tracking.level() != 2:
         tracking.trigger_event()
     assert tracking.level() == 2, "Tracker should have reached level 2"
@@ -20,7 +20,7 @@ def test_tracking_level_2():
 
 
 def test_tracking_level_3():
-    tracking = model.AttributeTracking(model.SpellAttribute.DISTANCE)
+    tracking = AttributeTracking(SpellAttribute.DISTANCE)
     while tracking.level() != 3:
         tracking.trigger_event()
     assert tracking.level() == 3, "Tracker should have reached level 3"

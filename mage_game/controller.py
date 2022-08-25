@@ -1,6 +1,6 @@
 import pygame
 
-from . import model
+from .model import state
 from .eventmanager import *
 
 
@@ -35,11 +35,11 @@ class MouseAndKeyboard:
                         self.evManager.Post(StateChangeEvent(None))
                     else:
                         currentstate = self.model.state.peek()
-                        if currentstate == model.GameState.STATE_MENU:
+                        if currentstate == state.GameState.STATE_MENU:
                             self.keydownmenu(event)
-                        if currentstate == model.GameState.STATE_PLAY:
+                        if currentstate == state.GameState.STATE_PLAY:
                             self.keydownplay(event)
-                        if currentstate == model.GameState.STATE_HELP:
+                        if currentstate == state.GameState.STATE_HELP:
                             self.keydownhelp(event)
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.mousedownplay(event)
@@ -54,7 +54,7 @@ class MouseAndKeyboard:
             self.evManager.Post(StateChangeEvent(None))
         # space plays the game
         if event.key == pygame.K_SPACE:
-            self.evManager.Post(StateChangeEvent(model.GameState.STATE_PLAY))
+            self.evManager.Post(StateChangeEvent(state.GameState.STATE_PLAY))
     
     def keydownhelp(self, event):
         """
@@ -73,7 +73,7 @@ class MouseAndKeyboard:
             self.evManager.Post(StateChangeEvent(None))
         # F1 shows the help
         if event.key == pygame.K_F1:    
-            self.evManager.Post(StateChangeEvent(model.GameState.STATE_HELP))
+            self.evManager.Post(StateChangeEvent(state.GameState.STATE_HELP))
         else:
             self.evManager.Post(InputEvent(unicode_char=event.unicode))
             

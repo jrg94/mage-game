@@ -3,9 +3,8 @@ import math
 import pygame
 from pygame.locals import RLEACCEL
 
-from . import model
+from .model import *
 from .eventmanager import *
-from .model import AttributeTracking, SpellAttribute
 
 
 class GraphicalView(object):
@@ -16,7 +15,7 @@ class GraphicalView(object):
     :param model: the model.
     """
 
-    def __init__(self, event_manager: model.EventManager, model: model.GameEngine):
+    def __init__(self, event_manager: EventManager, model: GameEngine):
         self.evManager = event_manager
         event_manager.RegisterListener(self)
         self.model = model
@@ -50,18 +49,18 @@ class GraphicalView(object):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
-            if currentstate == model.GameState.STATE_MENU:
+            if currentstate == state.GameState.STATE_MENU:
                 self.render_menu()
-            if currentstate == model.GameState.STATE_PLAY:
+            if currentstate == state.GameState.STATE_PLAY:
                 self.render_play()
-            if currentstate == model.GameState.STATE_HELP:
+            if currentstate == state.GameState.STATE_HELP:
                 self.render_help()
             self.clock.tick(self.fps)
         elif isinstance(event, InputEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
-            if currentstate == model.GameState.STATE_PLAY:
+            if currentstate == state.GameState.STATE_PLAY:
                 if event.click_pos and event.button == "left":
                     self.render_cast(event)
                 if event.char and event.char in "1234":
@@ -269,7 +268,7 @@ class Player(pygame.sprite.Sprite):
         
 class Dummy(pygame.sprite.Sprite):
     
-    def __init__(self, source: model.Enemy):
+    def __init__(self, source: state.Enemy):
         super().__init__()
         self.surf = pygame.Surface((50, 50))
         self.surf.fill((123, 0, 123))
@@ -305,7 +304,7 @@ class Projectile(pygame.sprite.Sprite):
     create different types of projectiles.
     """
 
-    def __init__(self, source: model.Projectile, trajectory: tuple, pos: tuple, meters_to_pixels: int):
+    def __init__(self, source: Projectile, trajectory: tuple, pos: tuple, meters_to_pixels: int):
         super(Projectile, self).__init__()
         self.surf = pygame.Surface((
             source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2, 
@@ -335,11 +334,11 @@ class Projectile(pygame.sprite.Sprite):
 
 
 class Palette(pygame.sprite.Sprite):
-    def __init__(self, source: model.Palette):
+    def __init__(self, source: Palette):
         super(Palette, self).__init__()
         self.surf = pygame.Surface((200, 50))
         self.rect = self.surf.get_rect()
-        self.source: model.Palette = source        
+        self.source: Palette = source        
 
     def update(self):
         left = 0
@@ -380,11 +379,11 @@ class Palette(pygame.sprite.Sprite):
             left += 50
 
 class Progress(pygame.sprite.Sprite):
-    def __init__(self, source: model.Character):
+    def __init__(self, source: state.Character):
         super().__init__()
         self.surf = pygame.Surface((600, 400))
         self.rect = self.surf.get_rect()
-        self.source: model.Character = source  
+        self.source: state.Character = source  
         self.smallfont = pygame.font.Font(None, 24)   
         
     def update(self):
