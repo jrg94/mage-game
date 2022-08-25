@@ -7,6 +7,14 @@ from typing import Callable
 class Element(Enum):
     """
     A handy enum for the spell elements in the game.
+    
+    :member FIRE: the oxygen powered burny element (red).
+    :member WATER: the wet element (blue).
+    :member EARTH: the dirty element (orange).
+    :member AIR: the invisible flowy element (turqouise).
+    :member LIGHT: the holy element (white).
+    :member DARK: the evil element (purple).
+    :member NONE: the neutral element (green)
     """
 
     FIRE = auto(), (255, 0, 0)
@@ -14,7 +22,7 @@ class Element(Enum):
     EARTH = auto(), (255, 255, 0)
     AIR = auto(), (0, 255, 255)
     LIGHT = auto(), (255, 255, 255)
-    DARK = auto(), (0, 0, 0)
+    DARK = auto(), (255, 0, 255)
     NONE = auto(), (0, 255, 0)
 
     def __new__(cls, *args, **kwargs):
