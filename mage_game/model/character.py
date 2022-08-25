@@ -25,13 +25,11 @@ class PaletteItem:
         """
         return self._cooldown <= 0.0
 
-    def reset_cooldown(self, cooldown: float) -> None:
+    def reset_cooldown(self) -> None:
         """
         Resets the cooldown of the palette item.
-
-        :param cooldown: the cooldown of the palette item in milliseconds.
         """
-        self._cooldown = cooldown
+        self._cooldown = self._spell.get_attribute(SpellAttribute.COOLDOWN)
 
     def get_spell(self) -> Projectile:
         """
@@ -40,6 +38,9 @@ class PaletteItem:
         :return: the spell of the palette item.
         """
         return self._spell
+    
+    def get_cooldown(self) -> float:
+        return self._cooldown
 
 
 @dataclass
