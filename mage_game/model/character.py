@@ -96,11 +96,7 @@ class Palette:
         """
         Resets the cooldown of the currently active spell.
         """
-        self.get_active_item().reset_cooldown(
-            self.get_active_item()
-                .get_spell()
-                .get_attribute(SpellAttribute.COOLDOWN) * 1000
-        )
+        self.get_active_item().reset_cooldown()
 
     def get_items(self) -> list[PaletteItem]:
         """
@@ -145,6 +141,25 @@ class Palette:
         :return: the time left to cast a spell in milliseconds
         """
         return self._casting_time
+    
+    def cast_active_spell(self) -> bool:
+        """
+        Attempts to cast the currently active spell.
+        Returns True if the cast was successful.
+        
+        .. note::
+           Casting does not actually do anything. It just manages
+           the underlying state in an expected way (e.g., 
+           checking if casting is possible, resetting cooldowns, etc.). 
+           The view should handle the launching of the projectile. 
+           
+        :return: True if the cast was successful; False otherwise
+        """
+        if self.can_cast_active_spell():
+            self.reset_active_spell_cooldown()
+            self.reset_casting_time()
+            return True
+        return False
 
 @dataclass
 class Character:
@@ -181,19 +196,10 @@ class Character:
     
     def cast(self) -> bool:
         """
-        Attempts to cast the currently active spell.
-        Returns True if the cast was successful.
-        
-        .. note::
-           Casting does not actually do anything. It just manages
-           the underlying state in an expected way (e.g., 
-           checking if casting is possible, resetting cooldowns, etc.). 
-           The view should handle the launching of the projectile. 
+        A convenience wrapper of the palette method cast_active_spell().
+        May extend the functionality in the future to alter other character
+        attributes. 
            
         :return: True if the cast was successful; False otherwise
         """
-        if self._palette.can_cast_active_spell():
-            self._palette.reset_active_spell_cooldown()
-            self._palette.reset_casting_time()
-            return True
-        return False
+        self._palette.cast_active_spell()
