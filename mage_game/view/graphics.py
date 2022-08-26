@@ -88,7 +88,7 @@ class GraphicalView(object):
             currentstate = self.model.state.peek()
             if currentstate == GameState.STATE_PLAY:
                 if event.button in self.cast_keys:
-                    self.render_cast(event)
+                    self.render_cast()
 
     def render_menu(self):
         """
@@ -116,7 +116,7 @@ class GraphicalView(object):
 
         # Process non-event based game logic
         self.handle_collisions()
-        self.handle_movement()
+        self.player.move(self.fps, self.meters_to_pixels)
         self.model.character._palette.update_cooldowns(self.clock.get_time())
         self.model.character._palette.update_casting_time(self.clock.get_time())
 
@@ -128,40 +128,29 @@ class GraphicalView(object):
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
 
-    def render_cast(self, event: KeyboardEvent):
+    def render_cast(self):
         """
         Render a spell cast.
         
         :param event: the input event that triggered this cast
         """
         if self.model.character.cast():
-
-            # Create projectile sprite
-            active_spell = self.model.character._palette.get_active_item().get_spell()
-            radius = math.ceil(active_spell.get_attribute(
-                SpellAttribute.RADIUS) * self.meters_to_pixels)
-            color = active_spell.element().color
-            trajectory = self._compute_trajectory(
-                active_spell.get_attribute(SpellAttribute.SPEED),
-                event.click_pos
-            )
+            # Create a projectile and cast it
+            source = self.model.character._palette.get_active_item().get_spell()
+            projectile_speed = (source.get_attribute(SpellAttribute.SPEED) * self.meters_to_pixels) / self.fps 
+            projectile_radius = source.get_attribute(SpellAttribute.RADIUS) * self.meters_to_pixels
+            charge_frames = source.get_attribute(SpellAttribute.CAST_TIME) * self.fps
+            cast_frames = (source.get_attribute(SpellAttribute.DISTANCE) / source.get_attribute(SpellAttribute.SPEED)) * self.fps
             projectile = ProjectileSprite(
-                self.player.rect.center,
-                active_spell,
-                trajectory,
-                self.meters_to_pixels
+                self.player,
+                (projectile_radius * 2, projectile_radius * 2),
+                source
             )
-
-            # Set starting position
-            projectile.rect = projectile.image.get_rect(
-                center=self.player.rect.center)
-
-            # Draw projectile
-            pygame.draw.circle(
-                projectile.image,
-                color,
-                projectile.image.get_rect().center,
-                radius
+            projectile.cast(
+                charge_frames,
+                cast_frames,
+                projectile_speed,
+                projectile_radius
             )
 
             # Add projectile to sprite group
@@ -185,7 +174,7 @@ class GraphicalView(object):
         self.screen.fill((0, 0, 0))
         self.model.character.select_palette_item(int(event.char) - 1)
         self.play_sprites.update()
-        self.play_sprites.draw(self.screen)
+        self.play_sprites.camera_draw(self.player)
         self.ui_sprites.update()
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
@@ -207,33 +196,6 @@ class GraphicalView(object):
                     damage.trigger_event()
                     attack.hit.append(enemy)
                     enemy.hit(damage.effective_value())
-        
-    def handle_movement(self):
-        keys = pygame.key.get_pressed()
-        movement = (self.model.character._speed * self.meters_to_pixels) / self.fps
-        if keys[pygame.K_w]:
-            self.player.rect.centery -= movement
-        if keys[pygame.K_a]:
-            self.player.rect.centerx -= movement
-        if keys[pygame.K_s]:
-            self.player.rect.centery += movement
-        if keys[pygame.K_d]:
-            self.player.rect.centerx += movement
-        
-    def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
-        """
-        A handy method for computing the path of a projectile in components
-        of speed as pixels.
-
-        :param speed: the speed of the projectile in meters per second.
-        :return: the trajectory of the projectile in xy components of pixels/frame
-        """
-        dx = click_position[0] - self.player.rect.centerx
-        dy = click_position[1] - self.player.rect.centery
-        radians = math.atan2(dy, dx)
-        velocityx = (speed * math.cos(radians) * self.meters_to_pixels) / self.fps
-        velocityy = (speed * math.sin(radians) * self.meters_to_pixels) / self.fps
-        return (velocityx, velocityy)
 
     def _init_misc_play_sprites(self) -> CharacterCameraGroup:
         """
@@ -249,8 +211,8 @@ class GraphicalView(object):
         # Setting up player
         self.player = PlayerSprite(
             self.screen.get_rect().center, 
-            self.model.character, 
-            self.meters_to_pixels
+            tuple(map(lambda x: x * self.meters_to_pixels, self.model.character._size)),
+            self.model.character
         )
         group.add(self.player)
         

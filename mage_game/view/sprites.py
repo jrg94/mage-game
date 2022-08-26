@@ -12,21 +12,33 @@ class PlayerSprite(pygame.sprite.Sprite):
     :param source: the player data reference
     """
 
-    def __init__(self, position: tuple, source: Character, meters_to_pixels: float):
+    def __init__(self, position: tuple, size: tuple, source: Character):
         super().__init__()
-        self.size = tuple(map(lambda x: x * meters_to_pixels, source._size))
+        self.size = size
         self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
         self.image = pygame.transform.scale(self.sprites[0], self.size)
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.image.get_rect(center=position)
         self.source = source
-        self.current_sprite = 0
+        self.frame = 0
+        
+    def move(self, fps: int, meters_to_pixels: float):
+        keys = pygame.key.get_pressed()
+        movement = (self.source._speed * meters_to_pixels) / fps
+        if keys[pygame.K_w]:
+            self.rect.centery -= movement
+        if keys[pygame.K_a]:
+            self.rect.centerx -= movement
+        if keys[pygame.K_s]:
+            self.rect.centery += movement
+        if keys[pygame.K_d]:
+            self.rect.centerx += movement
 
     def update(self):
-        self.current_sprite += .1
-        if self.current_sprite >= len(self.sprites):
-            self.current_sprite = 0
-        self.image = pygame.transform.scale(self.sprites[int(self.current_sprite)], self.size)
+        self.frame += .1
+        if self.frame >= len(self.sprites):
+            self.frame = 0
+        self.image = pygame.transform.scale(self.sprites[int(self.frame)], self.size)
         if pygame.mouse.get_pos()[0] < self.rect.center[0]:
             self.image = pygame.transform.flip(self.image, True, False)
 
@@ -64,8 +76,7 @@ class DummySprite(pygame.sprite.Sprite):
             text_surface = pygame.Surface((50, 50))
             text_surface.fill((255, 0, 0))
             text_surface.set_colorkey((255, 0, 0), RLEACCEL)
-            text_surface.blit(damage, damage.get_rect(
-                center=text_surface.get_rect().center))
+            text_surface.blit(damage, damage.get_rect(center=text_surface.get_rect().center))
             text_surface.set_alpha(self.alpha)
             self.image.blit(text_surface, text_surface.get_rect(
                 center=self.image.get_rect().center))
@@ -83,35 +94,69 @@ class ProjectileSprite(pygame.sprite.Sprite):
     :param meters_to_pixels: a scaling factor for converting model data
     """
 
-    def __init__(self, position: tuple, source: Projectile, trajectory: tuple, meters_to_pixels: int):
+    def __init__(self, origin: pygame.sprite.Sprite, size: tuple, source: Projectile):
         super().__init__()
-        self.image = pygame.Surface((
-            source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2,
-            source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2
-        ))
+        
+        # Storing inputs
+        self.source = source
+        self.origin = origin
+                
+        # Generating key sprite attributes
+        self.image = pygame.Surface(size)
         self.image.fill((255, 255, 255))
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect(center=position)
-        self.source = source
-        self.pos = pygame.Vector2(position)
-        self.trajectory = pygame.Vector2(trajectory)
-        self.distance_in_pixels: int = self.source.get_attribute(
-            SpellAttribute.DISTANCE) * meters_to_pixels
-        self.travel_distance: float = 0
-        self.start_time: float = pygame.time.get_ticks()
+        self.rect = self.image.get_rect(center=origin.rect.center)
+        
+        # Frame calculations
+        self.charge_frames = 0
+        self.cast_frames = 0
+        self.speed = 0
+        self.trajectory = None
+        
+        # Collision variables
         self.hit = []
-
+    
+    def cast(self, charge_frames: int, cast_frames: int, speed: int, radius: int):
+        """
+        Launches the projectile.
+        
+        :param frames: the number of frames to spend channeling the attack
+        """
+        pygame.draw.circle(self.image, self.source.element().color, self.image.get_rect().center, radius)
+        self.charge_frames = charge_frames
+        self.cast_frames = cast_frames
+        self.speed = speed
+        
     def update(self):
         """
         Animates the projectile. 
         """
-        if pygame.time.get_ticks() - self.start_time > self.source.get_attribute(SpellAttribute.CAST_TIME) * 1000:
-            self.pos += self.trajectory
-            self.travel_distance += math.sqrt(
-                self.trajectory[0] * self.trajectory[0] + self.trajectory[1] * self.trajectory[1])
-            self.rect.center = self.pos
-            if self.rect.right < 0 or self.travel_distance >= self.distance_in_pixels:
-                self.kill()
+        if self.charge_frames > 0:
+            self.charge_frames -= 1
+            self.rect.centerx = self.origin.rect.centerx
+            self.rect.centery = self.origin.rect.centery
+        elif self.cast_frames > 0:
+            self.cast_frames -= 1
+            if not self.trajectory:
+                self.trajectory = self._compute_trajectory()
+            self.rect.centerx += self.trajectory[0]
+            self.rect.centery += self.trajectory[1]
+        elif self.cast_frames == 0:
+            self.kill()
+                
+    def _compute_trajectory(self) -> pygame.math.Vector2:
+        """
+        A handy method for computing the path of a projectile in components
+        of speed as pixels.
+
+        :return: the trajectory of the projectile in xy components of pixels/frame
+        """
+        dx = pygame.mouse.get_pos()[0] - self.origin.rect.centerx
+        dy = pygame.mouse.get_pos()[1] - self.origin.rect.centery
+        radians = math.atan2(dy, dx)
+        velocityx = self.speed * math.cos(radians)
+        velocityy = self.speed * math.sin(radians)
+        return pygame.math.Vector2(velocityx, velocityy)
 
 
 class PaletteSprite(pygame.sprite.Sprite):
