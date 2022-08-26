@@ -27,7 +27,6 @@ class GameEngine:
         self.event_manager.RegisterListener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
-        self.world_width: int = 100  # in meters
         self.enemies: list[Enemy] = [Enemy()]
         self.character = Character.new_character()
 

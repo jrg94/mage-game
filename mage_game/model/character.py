@@ -166,12 +166,16 @@ class Character:
     """
     The Character class represents the character data.
 
-    :param spell_book: the list of spells that that the Character knows.
-    :param Palette: a set of spells that the Character can use.
+    :param _spell_book: the list of spells that that the Character knows.
+    :param _palette: a set of spells that the Character can use.
+    :param _size: the xy size of the character in meters 
+    :param _view_width: the amount of the world the character can see in meters
     """
 
     _spell_book: list[Projectile] = field(default_factory=list)
     _palette: Palette = field(default_factory=Palette)
+    _size: tuple = (1, .75) 
+    _view_width: float = 30 
 
     @staticmethod
     def new_character() -> Character:

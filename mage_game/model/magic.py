@@ -91,7 +91,7 @@ class SpellAttribute(Enum):
     COOLDOWN = auto(), 2.0
     CAST_TIME = auto(), 2.0
     DISTANCE = auto(), 10.0
-    RADIUS = auto(), .25
+    RADIUS = auto(), .1
     SPEED = auto(), 5.0
     COUNT = auto(), 1
 

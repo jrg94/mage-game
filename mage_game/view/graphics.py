@@ -67,6 +67,7 @@ class GraphicalView(object):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
+            # TODO: add scroll wheel event to zoom in and out
             if currentstate == GameState.STATE_PLAY:
                 if event.click_pos and event.button == "left":
                     self.render_cast(event)
@@ -214,7 +215,11 @@ class GraphicalView(object):
         group = pygame.sprite.Group()
         
         # Setting up player
-        self.player = PlayerSprite(self.screen.get_rect().center)
+        self.player = PlayerSprite(
+            self.screen.get_rect().center, 
+            self.model.character, 
+            self.meters_to_pixels
+        )
         group.add(self.player)
         
         # Setting up play text
@@ -283,10 +288,10 @@ class GraphicalView(object):
         pygame.display.set_caption('Mage Game')
         
         # Initialize graphics fields
-        self.screen = pygame.display.set_mode((800, 600))
+        self.screen = pygame.display.set_mode((0, 0))
         self.clock = pygame.time.Clock()
         self.fps = 30
-        self.meters_to_pixels = self.screen.get_width() / self.model.world_width
+        self.meters_to_pixels = self.screen.get_width() / self.model.character._view_width
         self.font = pygame.font.Font(None, 40)
 
         # Create sprite groups

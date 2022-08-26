@@ -9,21 +9,24 @@ class PlayerSprite(pygame.sprite.Sprite):
     The player sprite class.
     
     :param position: the initial position of the player
+    :param source: the player data reference
     """
 
-    def __init__(self, position: tuple):
+    def __init__(self, position: tuple, source: Character, meters_to_pixels: float):
         super().__init__()
+        self.size = tuple(map(lambda x: x * meters_to_pixels, source._size))
         self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
-        self.image = self.sprites[0]
+        self.image = pygame.transform.scale(self.sprites[0], self.size)
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.image.get_rect(center=position)
+        self.source = source
         self.current_sprite = 0
 
     def update(self):
         self.current_sprite += .1
         if self.current_sprite >= len(self.sprites):
             self.current_sprite = 0
-        self.image = self.sprites[int(self.current_sprite)]
+        self.image = pygame.transform.scale(self.sprites[int(self.current_sprite)], self.size)
 
 
 class DummySprite(pygame.sprite.Sprite):
@@ -176,7 +179,7 @@ class ProgressSprite(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((600, 400))
         self.rect = self.image.get_rect(center=position)
-        self.source: state.Character = source
+        self.source: Character = source
         self.smallfont = pygame.font.Font(None, 24)
 
     def update(self):
