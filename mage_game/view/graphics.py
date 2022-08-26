@@ -2,6 +2,8 @@ import math
 
 import pygame
 
+from mage_game.view.camera import CharacterCameraGroup
+
 from ..eventmanager import *
 from ..model import *
 from .sprites import *
@@ -33,12 +35,19 @@ class GraphicalView(object):
         self.palette: PaletteSprite = None
         self.help: ProgressSprite = None
         
-        # Sprite Groups
-        self.attack_sprites: pygame.sprite.Group = None
+        # Play sprite groups
+        self.attack_sprites: CharacterCameraGroup = None
+        self.play_sprites: CharacterCameraGroup = None
+        self.enemy_sprites: CharacterCameraGroup = None
+        
+        # Menu sprite groups
         self.help_sprites: pygame.sprite.Group = None
-        self.play_sprites: pygame.sprite.Group = None
-        self.enemy_sprites: pygame.sprite.Group = None
         self.menu_sprites: pygame.sprite.Group = None
+        
+        # Actions keys
+        self.palette_keys = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4)
+        self.movement_keys = (pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_w)
+        self.cast_keys = (pygame.BUTTON_LEFT,)
 
     def notify(self, event: Event):
         """
@@ -50,7 +59,6 @@ class GraphicalView(object):
         if isinstance(event, InitializeEvent):
             self.initialize()
         elif isinstance(event, QuitEvent):
-            # shut down the pygame graphics
             self.isinitialized = False
             pygame.quit()
         elif isinstance(event, TickEvent):
@@ -64,16 +72,23 @@ class GraphicalView(object):
             if currentstate == GameState.STATE_HELP:
                 self.render_help()
             self.clock.tick(self.fps)
-        elif isinstance(event, InputEvent):
+        elif isinstance(event, KeyboardEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
             # TODO: add scroll wheel event to zoom in and out
             if currentstate == GameState.STATE_PLAY:
-                if event.click_pos and event.button == "left":
-                    self.render_cast(event)
-                if event.char and event.char in "1234":
+                if event.key in self.palette_keys:
                     self.render_palette(event)
+                if event.key in self.movement_keys:
+                    pass
+        elif isinstance(event, MouseEvent):
+            if not self.isinitialized:
+                return
+            currentstate = self.model.state.peek()
+            if currentstate == GameState.STATE_PLAY:
+                if event.button in self.cast_keys:
+                    self.render_cast(event)
 
     def render_menu(self):
         """
@@ -97,7 +112,7 @@ class GraphicalView(object):
         # Render the scene
         self.screen.fill((0, 0, 0))
         self.play_sprites.update()
-        self.play_sprites.draw(self.screen)
+        self.play_sprites.camera_draw(self.player)
         pygame.display.flip()
 
     def render_help(self):
@@ -110,7 +125,7 @@ class GraphicalView(object):
         self.help_sprites.draw(self.screen)
         pygame.display.flip()
 
-    def render_cast(self, event: InputEvent):
+    def render_cast(self, event: KeyboardEvent):
         """
         Render a spell cast.
         
@@ -152,11 +167,11 @@ class GraphicalView(object):
 
             # Render sprites
             self.play_sprites.update()
-            self.play_sprites.draw(self.screen)
+            self.play_sprites.camera_draw(self.player)
 
             pygame.display.flip()
 
-    def render_palette(self, event: InputEvent):
+    def render_palette(self, event: KeyboardEvent):
         """
         Render the palette.
         
@@ -202,7 +217,7 @@ class GraphicalView(object):
         velocityy = (speed * math.sin(radians) * self.meters_to_pixels) / self.fps
         return (velocityx, velocityy)
 
-    def _init_misc_play_sprites(self) -> pygame.sprite.Group:
+    def _init_misc_play_sprites(self) -> CharacterCameraGroup:
         """
         A helper method that initializes all of the sprites
         that are used during the play portion of the game.
@@ -211,7 +226,7 @@ class GraphicalView(object):
         :return: a list of miscellaneous play sprites
         """
         
-        group = pygame.sprite.Group()
+        group = CharacterCameraGroup()
         
         # Setting up player
         self.player = PlayerSprite(
@@ -236,14 +251,14 @@ class GraphicalView(object):
         return group
         
         
-    def _init_enemy_sprites(self) -> pygame.sprite.Group:
+    def _init_enemy_sprites(self) -> CharacterCameraGroup:
         """
         A helper method for creating the initial enemies sprite group.
 
         :return: a list of enemy sprites
         """
         
-        group = pygame.sprite.Group()
+        group = CharacterCameraGroup()
 
         # Setting up dummy enemies
         for enemy in self.model.enemies:
@@ -311,7 +326,7 @@ class GraphicalView(object):
         self.font = pygame.font.Font(None, 40)
 
         # Create sprite groups
-        self.attack_sprites = pygame.sprite.Group()
+        self.attack_sprites = CharacterCameraGroup()
         self.enemy_sprites = self._init_enemy_sprites()
         self.play_sprites = self._init_misc_play_sprites()
         self.play_sprites.add(*self.enemy_sprites.sprites())

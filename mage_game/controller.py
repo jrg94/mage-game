@@ -36,15 +36,15 @@ class MouseAndKeyboard:
                     else:
                         currentstate = self.model.state.peek()
                         if currentstate == GameState.STATE_MENU:
-                            self.keydownmenu(event)
+                            self.key_down_menu(event)
                         if currentstate == GameState.STATE_PLAY:
-                            self.keydownplay(event)
+                            self.key_down_play(event)
                         if currentstate == GameState.STATE_HELP:
-                            self.keydownhelp(event)
+                            self.key_down_help(event)
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.mousedownplay(event)
+                    self.mouse_down_play(event)
 
-    def keydownmenu(self, event):
+    def key_down_menu(self, event):
         """
         Handles menu key events.
         """
@@ -56,7 +56,7 @@ class MouseAndKeyboard:
         if event.key == pygame.K_SPACE:
             self.evManager.Post(StateChangeEvent(GameState.STATE_PLAY))
 
-    def keydownhelp(self, event):
+    def key_down_help(self, event):
         """
         Handles help key events.
         """
@@ -65,7 +65,7 @@ class MouseAndKeyboard:
         if event.key in [pygame.K_ESCAPE, pygame.K_SPACE, pygame.K_RETURN]:
             self.evManager.Post(StateChangeEvent(None))
 
-    def keydownplay(self, event):
+    def key_down_play(self, event):
         """
         Handles play key events.
         """
@@ -75,14 +75,10 @@ class MouseAndKeyboard:
         if event.key == pygame.K_F1:
             self.evManager.Post(StateChangeEvent(GameState.STATE_HELP))
         else:
-            self.evManager.Post(InputEvent(unicode_char=event.unicode))
+            self.evManager.Post(KeyboardEvent(event.key, event.unicode))
 
-    def mousedownplay(self, event):
+    def mouse_down_play(self, event):
         """
         Handles play mouse events.
         """
-        if event.button == 1:
-            self.evManager.Post(InputEvent(click_pos=event.pos, button="left"))
-        if event.button == 3:
-            self.evManager.Post(InputEvent(
-                click_pos=event.pos, button="right"))
+        self.evManager.Post(MouseEvent(event.button, event.pos))

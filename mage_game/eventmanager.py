@@ -27,20 +27,34 @@ class TickEvent(Event):
     def __init__ (self):
         self.name = "Tick event"
     
-    
-class InputEvent(Event):
+   
+class MouseEvent(Event):
     """
-    Keyboard or mouse input event.
+    A mouse input event.
     """
     
-    def __init__(self, unicode_char: str = None, click_pos: tuple = None, button: str = None):
-        self.name = "Input event"
-        self.char = unicode_char
-        self.click_pos = click_pos
+    def __init__(self, button: int, click_pos: tuple):
+        self.name = "Mouse Input Event"
         self.button = button
+        self.click_pos = click_pos
         
     def __str__(self):
-        return f'{self.name}, char={self.char}, clickpos={self.click_pos}, button={self.button}'
+        return f"{self.name}: clickpos={self.click_pos}, button={self.button}"
+        
+    
+
+class KeyboardEvent(Event):
+    """
+    Keyboard input event.
+    """
+    
+    def __init__(self, key: int, unicode_char: str):
+        self.name = "Input event"
+        self.key = key
+        self.char = unicode_char
+        
+    def __str__(self):
+        return f'{self.name} (key={self.key}): char={self.char}'
     
     
 class InitializeEvent(Event):
