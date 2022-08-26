@@ -38,6 +38,7 @@ class GraphicalView(object):
         self.help_sprites: pygame.sprite.Group = None
         self.play_sprites: pygame.sprite.Group = None
         self.enemy_sprites: pygame.sprite.Group = None
+        self.menu_sprites: pygame.sprite.Group = None
 
     def notify(self, event: Event):
         """
@@ -79,10 +80,8 @@ class GraphicalView(object):
         Render the game menu.
         """
         self.screen.fill((0, 0, 0))
-        somewords = self.font.render(
-            'You are in the Menu. Space to play. Esc exits.',
-            True, (0, 255, 0))
-        self.screen.blit(somewords, (0, 0))
+        self.menu_sprites.update()
+        self.menu_sprites.draw(self.screen)
         pygame.display.flip()
 
     def render_play(self):
@@ -277,6 +276,23 @@ class GraphicalView(object):
         
         return group
     
+    def _init_menu_sprites(self) -> pygame.sprite.Group:
+        """
+        A helper methof for creating all the menu sprites.
+
+        :return: a group of menu sprites
+        """
+        group = pygame.sprite.Group()
+        
+        menu_text = StateText(
+            (self.screen.get_width() / 2, self.screen.get_height() / 2),
+            self.font,
+            'You are in the Menu. Space to play. Esc exits.',
+            anchor="center"
+        )
+        group.add(menu_text)
+        
+        return group
     
     def initialize(self):
         """
@@ -301,6 +317,7 @@ class GraphicalView(object):
         self.play_sprites.add(*self.enemy_sprites.sprites())
         self.play_sprites.add(*self.attack_sprites.sprites())
         self.help_sprites = self._init_help_sprites()
+        self.menu_sprites = self._init_menu_sprites()
         
         # Declaring the view initialized
         self.isinitialized = True

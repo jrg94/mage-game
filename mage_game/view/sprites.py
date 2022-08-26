@@ -216,8 +216,8 @@ class StateText(pygame.sprite.Sprite):
     :param text: the text to render
     """
     
-    def __init__(self, position: tuple, font: pygame.font.Font, text: str) -> None:
+    def __init__(self, position: tuple, font: pygame.font.Font, text: str, anchor: str = "topleft") -> None:
         super().__init__()
         self.font = font
         self.image = self.font.render(text, True, (0, 255, 0))
-        self.rect = self.image.get_rect(topleft=position)
+        self.rect = self.image.get_rect(**{anchor: position})
