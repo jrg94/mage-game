@@ -128,9 +128,9 @@ class GraphicalView(object):
                 event.click_pos
             )
             projectile = ProjectileSprite(
+                self.player.rect.center,
                 active_spell,
                 trajectory,
-                self.player.rect.center,
                 self.meters_to_pixels
             )
 

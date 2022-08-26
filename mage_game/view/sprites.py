@@ -71,9 +71,14 @@ class ProjectileSprite(pygame.sprite.Sprite):
     """
     A generic projectile sprite class that can be used to 
     create different types of projectiles.
+    
+    :param position: the initial position of the sprite
+    :param source: the reference data for the projectile
+    :param trajectory: the initial xy velocity of the projectile in pixels
+    :param meters_to_pixels: a scaling factor for converting model data
     """
 
-    def __init__(self, source: Projectile, trajectory: tuple, pos: tuple, meters_to_pixels: int):
+    def __init__(self, position: tuple, source: Projectile, trajectory: tuple, meters_to_pixels: int):
         super().__init__()
         self.image = pygame.Surface((
             source.get_attribute(SpellAttribute.RADIUS) * meters_to_pixels * 2,
@@ -81,9 +86,9 @@ class ProjectileSprite(pygame.sprite.Sprite):
         ))
         self.image.fill((255, 255, 255))
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect(center=pos)
+        self.rect = self.image.get_rect(center=position)
         self.source = source
-        self.pos = pygame.Vector2(pos)
+        self.pos = pygame.Vector2(position)
         self.trajectory = pygame.Vector2(trajectory)
         self.distance_in_pixels: int = self.source.get_attribute(
             SpellAttribute.DISTANCE) * meters_to_pixels
