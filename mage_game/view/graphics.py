@@ -39,6 +39,7 @@ class GraphicalView(object):
         self.attack_sprites: CharacterCameraGroup = None
         self.play_sprites: CharacterCameraGroup = None
         self.enemy_sprites: CharacterCameraGroup = None
+        self.ui_sprites: pygame.sprite.Group = None
         
         # Menu sprite groups
         self.help_sprites: pygame.sprite.Group = None
@@ -72,6 +73,7 @@ class GraphicalView(object):
             if currentstate == GameState.STATE_HELP:
                 self.render_help()
             self.clock.tick(self.fps)
+        # TODO: keyboard and mouse events are two generic -> make them more specific like MoveEvent
         elif isinstance(event, KeyboardEvent):
             if not self.isinitialized:
                 return
@@ -80,8 +82,6 @@ class GraphicalView(object):
             if currentstate == GameState.STATE_PLAY:
                 if event.key in self.palette_keys:
                     self.render_palette(event)
-                if event.key in self.movement_keys:
-                    pass
         elif isinstance(event, MouseEvent):
             if not self.isinitialized:
                 return
@@ -98,23 +98,7 @@ class GraphicalView(object):
         self.menu_sprites.update()
         self.menu_sprites.draw(self.screen)
         pygame.display.flip()
-
-    def render_play(self):
-        """
-        Render the game play.
-        """
-
-        # Process play game logic
-        self.handle_collisions() # TODO: where should this go?
-        self.model.character._palette.update_cooldowns(self.clock.get_time())
-        self.model.character._palette.update_casting_time(self.clock.get_time())
-
-        # Render the scene
-        self.screen.fill((0, 0, 0))
-        self.play_sprites.update()
-        self.play_sprites.camera_draw(self.player)
-        pygame.display.flip()
-
+        
     def render_help(self):
         """
         Render the help screen.
@@ -123,6 +107,25 @@ class GraphicalView(object):
         self.screen.fill((0, 0, 0))
         self.help_sprites.update()
         self.help_sprites.draw(self.screen)
+        pygame.display.flip()
+
+    def render_play(self):
+        """
+        Render the game play.
+        """
+
+        # Process non-event based game logic
+        self.handle_collisions()
+        self.handle_movement()
+        self.model.character._palette.update_cooldowns(self.clock.get_time())
+        self.model.character._palette.update_casting_time(self.clock.get_time())
+
+        # Render the scene
+        self.screen.fill((0, 0, 0))
+        self.play_sprites.update()
+        self.play_sprites.camera_draw(self.player)
+        self.ui_sprites.update()
+        self.ui_sprites.draw(self.screen)
         pygame.display.flip()
 
     def render_cast(self, event: KeyboardEvent):
@@ -168,6 +171,8 @@ class GraphicalView(object):
             # Render sprites
             self.play_sprites.update()
             self.play_sprites.camera_draw(self.player)
+            self.ui_sprites.update()
+            self.ui_sprites.draw(self.screen)
 
             pygame.display.flip()
 
@@ -181,6 +186,8 @@ class GraphicalView(object):
         self.model.character.select_palette_item(int(event.char) - 1)
         self.play_sprites.update()
         self.play_sprites.draw(self.screen)
+        self.ui_sprites.update()
+        self.ui_sprites.draw(self.screen)
         pygame.display.flip()
 
     def handle_collisions(self):
@@ -200,7 +207,18 @@ class GraphicalView(object):
                     damage.trigger_event()
                     attack.hit.append(enemy)
                     enemy.hit(damage.effective_value())
-        pygame.display.flip()
+        
+    def handle_movement(self):
+        keys = pygame.key.get_pressed()
+        movement = (self.model.character._speed * self.meters_to_pixels) / self.fps
+        if keys[pygame.K_w]:
+            self.player.rect.centery -= movement
+        if keys[pygame.K_a]:
+            self.player.rect.centerx -= movement
+        if keys[pygame.K_s]:
+            self.player.rect.centery += movement
+        if keys[pygame.K_d]:
+            self.player.rect.centerx += movement
         
     def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
         """
@@ -235,18 +253,6 @@ class GraphicalView(object):
             self.meters_to_pixels
         )
         group.add(self.player)
-        
-        # Setting up play text
-        play_text = StateText(
-            (0, self.screen.get_height() - self.font.get_height()),
-            self.font,
-            'You are playing the game. F1 for help.'
-        )
-        group.add(play_text)
-        
-        # Setting up palette
-        self.palette = PaletteSprite((0, 0), self.model.character._palette)
-        group.add(self.palette)
         
         return group
         
@@ -309,6 +315,23 @@ class GraphicalView(object):
         
         return group
     
+    def _init_ui_sprites(self) -> pygame.sprite.Group:
+        group = pygame.sprite.Group()
+        
+        # Setting up play text
+        play_text = StateText(
+            (0, self.screen.get_height() - self.font.get_height()),
+            self.font,
+            'You are playing the game. F1 for help.'
+        )
+        group.add(play_text)
+        
+        # Setting up palette
+        self.palette = PaletteSprite((0, 0), self.model.character._palette)
+        group.add(self.palette)
+        
+        return group
+    
     def initialize(self):
         """
         Set up the pygame graphical display and loads graphical resources.
@@ -331,6 +354,7 @@ class GraphicalView(object):
         self.play_sprites = self._init_misc_play_sprites()
         self.play_sprites.add(*self.enemy_sprites.sprites())
         self.play_sprites.add(*self.attack_sprites.sprites())
+        self.ui_sprites = self._init_ui_sprites()
         self.help_sprites = self._init_help_sprites()
         self.menu_sprites = self._init_menu_sprites()
         

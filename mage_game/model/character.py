@@ -175,7 +175,8 @@ class Character:
     _spell_book: list[Projectile] = field(default_factory=list)
     _palette: Palette = field(default_factory=Palette)
     _size: tuple = (1, .75) 
-    _view_width: float = 30 
+    _view_width: float = 30
+    _speed: float = 1.4
 
     @staticmethod
     def new_character() -> Character:
