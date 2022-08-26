@@ -81,6 +81,8 @@ class SpellAttribute(Enum):
     :member RADIUS: radius refers to the size of a spell in meters.
     :member SPEED: speed refers to the travel speed of a spell in
        meters per second.
+    :member COUNT: coutn refers to the number of instances of a spell 
+       (e.g., # of projectiles)
     """
 
     DAMAGE = auto(), 1
@@ -91,6 +93,7 @@ class SpellAttribute(Enum):
     DISTANCE = auto(), 10.0
     RADIUS = auto(), .25
     SPEED = auto(), 5.0
+    COUNT = auto(), 1
 
     def __new__(cls, *args, **kwargs):
         obj = object.__new__(cls)
@@ -194,6 +197,7 @@ class Projectile:
         SpellAttribute.CAST_TIME: AttributeTracking(SpellAttribute.CAST_TIME, _scale="inverse", _units="s"),
         SpellAttribute.CRIT_CHANCE: AttributeTracking(SpellAttribute.CRIT_CHANCE, _units="%")
     })
+    # TODO: add a path field to dictate how the projectile should travel
 
     def get_tracking(self, attribute: SpellAttribute) -> AttributeTracking | None:
         """

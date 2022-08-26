@@ -31,7 +31,7 @@ class DummySprite(pygame.sprite.Sprite):
     A dummy enemy used for testing. Does not move or attack.
 
     :param position: the initial position of the sprite
-    :source: the reference data for the sprite
+    :param source: the reference data for the sprite
     """
 
     def __init__(self, position: tuple, source: Enemy):
@@ -202,7 +202,8 @@ class ProgressSprite(pygame.sprite.Sprite):
             if top + len(spell._attributes.values()) * text.get_height() > 400:
                 left += 300
                 top = 0
-                
+        
+        
 class StateText(pygame.sprite.Sprite):
     """
     A generic text sprite. Can be used to render text.

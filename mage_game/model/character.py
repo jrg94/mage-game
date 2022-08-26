@@ -202,7 +202,7 @@ class Character:
            
         :return: True if the cast was successful; False otherwise
         """
-        return self._palette.cast_active_spell()
+        return self._palette.cast_active_spell() # TODO: change this method to accept the click position in game units (meters)
     
     def select_palette_item(self, selection: int) -> None:
         """
