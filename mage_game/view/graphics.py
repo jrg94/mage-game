@@ -144,7 +144,8 @@ class GraphicalView(object):
             projectile = ProjectileSprite(
                 self.player,
                 (projectile_radius * 2, projectile_radius * 2),
-                source
+                source,
+                self.play_sprites
             )
             projectile.cast(
                 charge_frames,
@@ -212,7 +213,8 @@ class GraphicalView(object):
         self.player = PlayerSprite(
             self.screen.get_rect().center, 
             tuple(map(lambda x: x * self.meters_to_pixels, self.model.character._size)),
-            self.model.character
+            self.model.character,
+            group
         )
         group.add(self.player)
         

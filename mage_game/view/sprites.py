@@ -1,6 +1,8 @@
 import pygame
 from pygame import RLEACCEL
 
+from mage_game.view.camera import CharacterCameraGroup
+
 from ..model import *
 
 
@@ -12,9 +14,10 @@ class PlayerSprite(pygame.sprite.Sprite):
     :param source: the player data reference
     """
 
-    def __init__(self, position: tuple, size: tuple, source: Character):
+    def __init__(self, position: tuple, size: tuple, source: Character, camera_group: CharacterCameraGroup):
         super().__init__()
         self.size = size
+        self.camera_group = camera_group
         self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
         self.image = pygame.transform.scale(self.sprites[0], self.size)
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
@@ -39,7 +42,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         if self.frame >= len(self.sprites):
             self.frame = 0
         self.image = pygame.transform.scale(self.sprites[int(self.frame)], self.size)
-        if pygame.mouse.get_pos()[0] < self.rect.center[0]:
+        if pygame.mouse.get_pos()[0] < (self.rect.center[0] - self.camera_group.offset[0]):
             self.image = pygame.transform.flip(self.image, True, False)
 
 
@@ -94,12 +97,14 @@ class ProjectileSprite(pygame.sprite.Sprite):
     :param meters_to_pixels: a scaling factor for converting model data
     """
 
-    def __init__(self, origin: pygame.sprite.Sprite, size: tuple, source: Projectile):
+    def __init__(self, origin: pygame.sprite.Sprite, size: tuple, source: Projectile, camera_group: CharacterCameraGroup):
         super().__init__()
         
         # Storing inputs
         self.source = source
+        self.size = size
         self.origin = origin
+        self.camera_group = camera_group
                 
         # Generating key sprite attributes
         self.image = pygame.Surface(size)
@@ -112,6 +117,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.cast_frames = 0
         self.speed = 0
         self.trajectory = None
+        self.position = None
         
         # Collision variables
         self.hit = []
@@ -138,9 +144,11 @@ class ProjectileSprite(pygame.sprite.Sprite):
         elif self.cast_frames > 0:
             self.cast_frames -= 1
             if not self.trajectory:
+                self.position = pygame.math.Vector2(self.origin.rect.center)
                 self.trajectory = self._compute_trajectory()
-            self.rect.centerx += self.trajectory[0]
-            self.rect.centery += self.trajectory[1]
+            self.position += self.trajectory
+            self.rect.centerx = self.position[0]
+            self.rect.centery = self.position[1]
         elif self.cast_frames == 0:
             self.kill()
                 
@@ -151,8 +159,9 @@ class ProjectileSprite(pygame.sprite.Sprite):
 
         :return: the trajectory of the projectile in xy components of pixels/frame
         """
-        dx = pygame.mouse.get_pos()[0] - self.origin.rect.centerx
-        dy = pygame.mouse.get_pos()[1] - self.origin.rect.centery
+        dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
+        dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
+        print(pygame.mouse.get_pos(), self.origin.rect.center)
         radians = math.atan2(dy, dx)
         velocityx = self.speed * math.cos(radians)
         velocityy = self.speed * math.sin(radians)
