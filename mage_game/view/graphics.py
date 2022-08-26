@@ -16,21 +16,28 @@ class GraphicalView(object):
     """
 
     def __init__(self, event_manager: EventManager, model: GameEngine):
-        self.evManager = event_manager
-        event_manager.RegisterListener(self)
-        self.model = model
-        self.isinitialized = False
-        self.fps = None
-        self.meters_to_pixels = None
-        self.screen = None
-        self.clock = None
-        self.smallfont = None
-        self.player = None
-        self.palette = None
-        self.attacks = None
-        self.play_sprites = None
-        self.enemies = None
-        self.help = None
+        self.event_manager: EventManager = event_manager
+        self.event_manager.RegisterListener(self)
+        self.model: GameEngine = model
+        
+        # Graphics variables
+        self.isinitialized: bool = False
+        self.fps: int = None
+        self.meters_to_pixels: float = None
+        self.screen: pygame.Surface = None
+        self.clock: pygame.time.Clock = None
+        self.font: pygame.font.Font = None
+        
+        # Sprites
+        self.player: PlayerSprite = None
+        self.palette: PaletteSprite = None
+        self.help: ProgressSprite = None
+        
+        # Sprite Groups
+        self.attack_sprites: pygame.sprite.Group = None
+        self.help_sprites: pygame.sprite.Group = None
+        self.play_sprites: pygame.sprite.Group = None
+        self.enemy_sprites: pygame.sprite.Group = None
 
     def notify(self, event: Event):
         """
@@ -66,29 +73,12 @@ class GraphicalView(object):
                 if event.char and event.char in "1234":
                     self.render_palette(event)
 
-    def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
-        """
-        A handy method for computing the path of a projectile in components
-        of speed as pixels.
-
-        :param speed: the speed of the projectile in meters per second.
-        :return: the trajectory of the projectile in xy components of pixels/frame
-        """
-        dx = click_position[0] - self.player.rect.centerx
-        dy = click_position[1] - self.player.rect.centery
-        radians = math.atan2(dy, dx)
-        velocityx = (speed * math.cos(radians) *
-                     self.meters_to_pixels) / self.fps
-        velocityy = (speed * math.sin(radians) *
-                     self.meters_to_pixels) / self.fps
-        return (velocityx, velocityy)
-
     def render_menu(self):
         """
         Render the game menu.
         """
         self.screen.fill((0, 0, 0))
-        somewords = self.smallfont.render(
+        somewords = self.font.render(
             'You are in the Menu. Space to play. Esc exits.',
             True, (0, 255, 0))
         self.screen.blit(somewords, (0, 0))
@@ -100,22 +90,13 @@ class GraphicalView(object):
         """
 
         # Process play game logic
-        self.handle_collisions()
+        self.handle_collisions() # TODO: where should this go?
         self.model.character._palette.update_cooldowns(self.clock.get_time())
         self.model.character._palette.update_casting_time(self.clock.get_time())
-        self.play_sprites.update()
 
         # Render the scene
         self.screen.fill((0, 0, 0))
-        somewords = self.smallfont.render(
-            'You are playing the game. F1 for help.',
-            True,
-            (0, 255, 0)
-        )
-        self.screen.blit(
-            somewords,
-            (0, self.screen.get_height() - somewords.get_height())
-        )
+        self.play_sprites.update()
         self.play_sprites.draw(self.screen)
         pygame.display.flip()
 
@@ -125,17 +106,15 @@ class GraphicalView(object):
         """
 
         self.screen.fill((0, 0, 0))
-        somewords = self.smallfont.render(
-            'Help is here. space, escape or return.',
-            True, (0, 255, 0))
-        self.screen.blit(somewords, (0, 0))
-        self.help.update()
-        self.screen.blit(self.help.image, self.help.rect)
+        self.help_sprites.update()
+        self.help_sprites.draw(self.screen)
         pygame.display.flip()
 
     def render_cast(self, event: InputEvent):
         """
         Render a spell cast.
+        
+        :param event: the input event that triggered this cast
         """
         if self.model.character.cast():
 
@@ -168,7 +147,7 @@ class GraphicalView(object):
             )
 
             # Add projectile to sprite group
-            self.attacks.add(projectile)
+            self.attack_sprites.add(projectile)
             self.play_sprites.add(projectile)
 
             # Render sprites
@@ -180,27 +159,120 @@ class GraphicalView(object):
     def render_palette(self, event: InputEvent):
         """
         Render the palette.
+        
+        :param event: the input event that triggered this change in palette.
         """
         self.screen.fill((0, 0, 0))
-        self.model.character._palette.set_active_palette_item(
-            int(event.char) - 1)
+        self.model.character.select_palette_item(int(event.char) - 1)
         self.play_sprites.update()
         self.play_sprites.draw(self.screen)
         pygame.display.flip()
 
     def handle_collisions(self):
-        for attack in self.attacks:
+        """
+        A helper method that detects when projectiles intersect
+        with enemies. 
+        """
+        for attack in self.attack_sprites:
             enemies: list[pygame.sprite.Sprite] = pygame.sprite.spritecollide(
-                attack, self.enemies, False)
+                attack, 
+                self.enemy_sprites, 
+                False
+            )
             for enemy in enemies:
                 if enemy not in attack.hit:
-                    damage: AttributeTracking = attack.source.get_tracking(
-                        SpellAttribute.DAMAGE)
+                    damage: AttributeTracking = attack.source.get_tracking(SpellAttribute.DAMAGE)
                     damage.trigger_event()
                     attack.hit.append(enemy)
                     enemy.hit(damage.effective_value())
         pygame.display.flip()
+        
+    def _compute_trajectory(self, speed: float, click_position: tuple) -> tuple:
+        """
+        A handy method for computing the path of a projectile in components
+        of speed as pixels.
 
+        :param speed: the speed of the projectile in meters per second.
+        :return: the trajectory of the projectile in xy components of pixels/frame
+        """
+        dx = click_position[0] - self.player.rect.centerx
+        dy = click_position[1] - self.player.rect.centery
+        radians = math.atan2(dy, dx)
+        velocityx = (speed * math.cos(radians) * self.meters_to_pixels) / self.fps
+        velocityy = (speed * math.sin(radians) * self.meters_to_pixels) / self.fps
+        return (velocityx, velocityy)
+
+    def _init_misc_play_sprites(self) -> pygame.sprite.Group:
+        """
+        A helper method that initializes all of the sprites
+        that are used during the play portion of the game.
+        Not all play sprites are generated here.
+
+        :return: a list of miscellaneous play sprites
+        """
+        
+        group = pygame.sprite.Group()
+        
+        # Setting up player
+        self.player = PlayerSprite(self.screen.get_rect().center)
+        group.add(self.player)
+        
+        # Setting up play text
+        play_text = StateText(
+            (0, self.screen.get_height() - self.font.get_height()),
+            self.font,
+            'You are playing the game. F1 for help.'
+        )
+        group.add(play_text)
+        
+        # Setting up palette
+        self.palette = PaletteSprite((0, 0), self.model.character._palette)
+        group.add(self.palette)
+        
+        return group
+        
+        
+    def _init_enemy_sprites(self) -> pygame.sprite.Group:
+        """
+        A helper method for creating the initial enemies sprite group.
+
+        :return: a list of enemy sprites
+        """
+        
+        group = pygame.sprite.Group()
+
+        # Setting up dummy enemies
+        for enemy in self.model.enemies:
+            dummy = DummySprite((400, 400), enemy)
+            group.add(dummy)
+            
+        return group
+    
+    
+    def _init_help_sprites(self) -> pygame.sprite.Group:
+        """
+        A helper method for creating all of the sprites
+        seen in the help menu.
+
+        :return: a group of help menu sprites
+        """
+        
+        group = pygame.sprite.Group()
+        
+        # Setting up help screen
+        self.help = ProgressSprite(
+            self.screen.get_rect().center, 
+            self.model.character
+        )
+        group.add(self.help)
+        
+        # Setting up help text
+        help_text = StateText((0, 0), self.font, 'Help is here. space, escape or return.')
+        group.add(help_text)
+        
+        return group
+    
+    
     def initialize(self):
         """
         Set up the pygame graphical display and loads graphical resources.
@@ -209,38 +281,21 @@ class GraphicalView(object):
         pygame.init()
         pygame.font.init()
         pygame.display.set_caption('Mage Game')
+        
+        # Initialize graphics fields
         self.screen = pygame.display.set_mode((800, 600))
         self.clock = pygame.time.Clock()
         self.fps = 30
         self.meters_to_pixels = self.screen.get_width() / self.model.world_width
-        self.smallfont = pygame.font.Font(None, 40)
+        self.font = pygame.font.Font(None, 40)
 
         # Create sprite groups
-        self.play_sprites = pygame.sprite.Group()
-        self.attacks = pygame.sprite.Group()
-        self.enemies = pygame.sprite.Group()
-
-        # Setting up player
-        self.player = PlayerSprite()
-        self.player.rect = self.player.image.get_rect(
-            center=self.screen.get_rect().center)
-        self.play_sprites.add(self.player)
-
-        # Setting up palette
-        self.palette = PaletteSprite(self.model.character._palette)
-        self.play_sprites.add(self.palette)
-
-        # Setting up dummy enemies
-        for enemy in self.model.enemies:
-            dummy = DummySprite(enemy)
-            dummy.rect = dummy.image.get_rect(center=(400, 400))
-            self.enemies.add(dummy)
-            self.play_sprites.add(dummy)
-
-        # Setting up help screen
-        self.help = ProgressSprite(self.model.character)
-        self.help.rect = self.help.image.get_rect(
-            center=self.screen.get_rect().center)
-
+        self.attack_sprites = pygame.sprite.Group()
+        self.enemy_sprites = self._init_enemy_sprites()
+        self.play_sprites = self._init_misc_play_sprites()
+        self.play_sprites.add(*self.enemy_sprites.sprites())
+        self.play_sprites.add(*self.attack_sprites.sprites())
+        self.help_sprites = self._init_help_sprites()
+        
         # Declaring the view initialized
         self.isinitialized = True

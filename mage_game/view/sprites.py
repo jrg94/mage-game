@@ -7,14 +7,16 @@ from ..model import *
 class PlayerSprite(pygame.sprite.Sprite):
     """
     The player sprite class.
+    
+    :param position: the initial position of the player
     """
 
-    def __init__(self):
+    def __init__(self, position: tuple):
         super().__init__()
         self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
         self.image = self.sprites[0]
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center=position)
         self.current_sprite = 0
 
     def update(self):
@@ -25,12 +27,18 @@ class PlayerSprite(pygame.sprite.Sprite):
 
 
 class DummySprite(pygame.sprite.Sprite):
+    """
+    A dummy enemy used for testing. Does not move or attack.
 
-    def __init__(self, source: Enemy):
+    :param position: the initial position of the sprite
+    :source: the reference data for the sprite
+    """
+
+    def __init__(self, position: tuple, source: Enemy):
         super().__init__()
         self.image = pygame.Surface((50, 50))
         self.image.fill((123, 0, 123))
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center=position)
         self.source = source
         self.smallfont = pygame.font.Font(None, 40)
         self.last_hit: int | None = None
@@ -97,10 +105,17 @@ class ProjectileSprite(pygame.sprite.Sprite):
 
 
 class PaletteSprite(pygame.sprite.Sprite):
-    def __init__(self, source: Palette):
+    """
+    The player's palette sprite class.
+
+    :param position: the location of the palette on the screen
+    :param source: the palette model for reference
+    """
+    
+    def __init__(self, position: tuple, source: Palette):
         super().__init__()
         self.image = pygame.Surface((200, 50))
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(topleft=position)
         self.source: Palette = source
 
     def update(self):
@@ -144,10 +159,18 @@ class PaletteSprite(pygame.sprite.Sprite):
 
 
 class ProgressSprite(pygame.sprite.Sprite):
-    def __init__(self, source: state.Character):
+    """
+    A sprite used to render the help menu. Shows details
+    of player progress.
+
+    :param position: the initial position of the progress sprite
+    :param source: the reference data for generating the progress sprite
+    """
+    
+    def __init__(self, position: tuple, source: Character):
         super().__init__()
         self.image = pygame.Surface((600, 400))
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center=position)
         self.source: state.Character = source
         self.smallfont = pygame.font.Font(None, 24)
 
@@ -174,3 +197,18 @@ class ProgressSprite(pygame.sprite.Sprite):
             if top + len(spell._attributes.values()) * text.get_height() > 400:
                 left += 300
                 top = 0
+                
+class StateText(pygame.sprite.Sprite):
+    """
+    A generic text sprite. Can be used to render text.
+
+    :param position: the initial position of the text
+    :param font: the font used to render the text
+    :param text: the text to render
+    """
+    
+    def __init__(self, position: tuple, font: pygame.font.Font, text: str) -> None:
+        super().__init__()
+        self.font = font
+        self.image = self.font.render(text, True, (0, 255, 0))
+        self.rect = self.image.get_rect(topleft=position)

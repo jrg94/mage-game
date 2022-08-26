@@ -203,3 +203,6 @@ class Character:
         :return: True if the cast was successful; False otherwise
         """
         return self._palette.cast_active_spell()
+    
+    def select_palette_item(self, selection: int) -> None:
+        self._palette.set_active_palette_item(selection)
