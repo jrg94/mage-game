@@ -205,4 +205,9 @@ class Character:
         return self._palette.cast_active_spell()
     
     def select_palette_item(self, selection: int) -> None:
+        """
+        A convenience wrapper of the palette method set_active_palette_item().
+
+        :param selection: _description_
+        """
         self._palette.set_active_palette_item(selection)
