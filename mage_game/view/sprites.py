@@ -27,6 +27,8 @@ class PlayerSprite(pygame.sprite.Sprite):
         if self.current_sprite >= len(self.sprites):
             self.current_sprite = 0
         self.image = pygame.transform.scale(self.sprites[int(self.current_sprite)], self.size)
+        if pygame.mouse.get_pos()[0] < self.rect.center[0]:
+            self.image = pygame.transform.flip(self.image, True, False)
 
 
 class DummySprite(pygame.sprite.Sprite):
