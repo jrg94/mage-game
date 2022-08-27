@@ -141,26 +141,47 @@ class ProjectileSprite(pygame.sprite.Sprite):
         Animates the projectile. 
         """
         if self.charge_frames > 0:
-            self.charge_frames -= 1
-            self.rect.centerx = self.origin.rect.centerx
-            self.rect.centery = self.origin.rect.centery
-            self.radius += self.radius_per_frame
-            pygame.draw.circle(
-                self.image, 
-                self.source.element().color, 
-                self.image.get_rect().center, 
-                self.radius
-            )
+            self._charge()
         elif self.cast_frames > 0:
-            self.cast_frames -= 1
-            if not self.trajectory:
-                self.position = pygame.math.Vector2(self.origin.rect.center)
-                self.trajectory = self._compute_trajectory()
-            self.position += self.trajectory
-            self.rect.centerx = self.position[0]
-            self.rect.centery = self.position[1]
+            self._shoot()
         elif self.cast_frames == 0:
             self.kill()
+            
+    def _charge(self):
+        self.charge_frames -= 1
+        self.radius += self.radius_per_frame
+        self._position_projectile()
+        self._draw_projectile()
+        
+    def _shoot(self):
+        self.cast_frames -= 1
+        if not self.trajectory:
+            self.trajectory = self._compute_trajectory()
+        self.position += self.trajectory
+        self.rect.centerx = self.position[0]
+        self.rect.centery = self.position[1]
+        self._draw_projectile()
+            
+    def _draw_projectile(self):
+        self.image.fill((255, 255, 255))
+        pygame.draw.circle(
+            self.image, 
+            self.source.element().color, 
+            self.image.get_rect().center, 
+            self.radius
+        )
+        
+    def _position_projectile(self):
+        dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
+        dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
+        radians = math.atan2(dy, dx)
+        print(self.image.get_size())
+        x = self.origin.image.get_bounding_rect().width * math.cos(radians) + self.origin.rect.centerx
+        y = self.origin.image.get_bounding_rect().width * math.sin(radians) + self.origin.rect.centery
+        print((x, y), self.origin.rect.center)
+        self.position = pygame.math.Vector2((x, y))
+        self.rect.centerx = self.position[0]
+        self.rect.centery = self.position[1]
                 
     def _compute_trajectory(self) -> pygame.math.Vector2:
         """
