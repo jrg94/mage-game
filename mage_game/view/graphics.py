@@ -141,9 +141,10 @@ class GraphicalView(object):
             projectile_radius = source.get_attribute(SpellAttribute.RADIUS) * self.meters_to_pixels
             charge_frames = source.get_attribute(SpellAttribute.CAST_TIME) * self.fps
             cast_frames = (source.get_attribute(SpellAttribute.DISTANCE) / source.get_attribute(SpellAttribute.SPEED)) * self.fps
+            diameter = math.ceil(projectile_radius * 2)
             projectile = ProjectileSprite(
                 self.player,
-                (projectile_radius * 2, projectile_radius * 2),
+                (diameter, diameter),
                 source,
                 self.play_sprites
             )

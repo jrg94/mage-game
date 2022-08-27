@@ -171,7 +171,6 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
         dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
-        print(pygame.mouse.get_pos(), self.origin.rect.center)
         radians = math.atan2(dy, dx)
         velocityx = self.speed * math.cos(radians)
         velocityy = self.speed * math.sin(radians)
