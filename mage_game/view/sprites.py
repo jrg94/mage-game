@@ -118,6 +118,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.speed = 0
         self.trajectory = None
         self.position = None
+        self.radius = 0
+        self.radius_per_frame = 0
         
         # Collision variables
         self.hit = []
@@ -128,10 +130,11 @@ class ProjectileSprite(pygame.sprite.Sprite):
         
         :param frames: the number of frames to spend channeling the attack
         """
-        pygame.draw.circle(self.image, self.source.element().color, self.image.get_rect().center, radius)
+        pygame.draw.circle(self.image, self.source.element().color, self.image.get_rect().center, 1)
         self.charge_frames = charge_frames
         self.cast_frames = cast_frames
         self.speed = speed
+        self.radius_per_frame = radius / self.cast_frames
         
     def update(self):
         """
@@ -141,6 +144,13 @@ class ProjectileSprite(pygame.sprite.Sprite):
             self.charge_frames -= 1
             self.rect.centerx = self.origin.rect.centerx
             self.rect.centery = self.origin.rect.centery
+            self.radius += self.radius_per_frame
+            pygame.draw.circle(
+                self.image, 
+                self.source.element().color, 
+                self.image.get_rect().center, 
+                self.radius
+            )
         elif self.cast_frames > 0:
             self.cast_frames -= 1
             if not self.trajectory:
