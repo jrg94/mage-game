@@ -24,7 +24,13 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.source = source
         self.frame = 0
 
-    def move(self, fps: int, meters_to_pixels: float):
+    def move(self, fps: int, meters_to_pixels: float) -> None:
+        """
+        Moves the character based on key presses.
+
+        :param fps: frames per second
+        :param meters_to_pixels: the meters per pixel conversion rate
+        """
         keys = pygame.key.get_pressed()
         movement = (self.source._speed * meters_to_pixels) / fps
         if keys[pygame.K_w]:
