@@ -1,9 +1,13 @@
+import logging
 import random
+
 import pygame
 from mage_game.view.camera import CharacterCameraGroup
 from pygame import RLEACCEL
 
 from ..model import *
+
+logger = logging.getLogger(__name__)
 
 
 class PlayerSprite(pygame.sprite.Sprite):
@@ -15,6 +19,7 @@ class PlayerSprite(pygame.sprite.Sprite):
     """
 
     def __init__(self, position: tuple, size: tuple, source: Character, camera_group: CharacterCameraGroup):
+        logger.debug(f"Created player sprite on screen at {position} with dimensions {size}.")
         super().__init__()
         self.size = size
         self.camera_group = camera_group
