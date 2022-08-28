@@ -162,6 +162,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.cast_frames = cast_frames
         self.speed = speed
         self.radius_per_frame = radius / self.cast_frames
+        self._position_projectile()
         self._draw_projectile()
 
     def update(self):
@@ -180,8 +181,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
         Runs the spell charge animation.
         """
         self._draw_projectile()
-        self._position_projectile()
         self._trajectory_animation()
+        self._position_projectile()
         self.charge_frames -= 1
         self.radius += self.radius_per_frame
 
