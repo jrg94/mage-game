@@ -210,12 +210,11 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         particle_count = (self.size[0] * self.size[1]) // 20
         particle_color = self._get_adjacent_color(self.source.element().color, random.randint(25, 35))
-        camera = self.position - self.camera_group.offset
         for _ in range(particle_count):
-            x = random.randint(int(camera[0] - self.size[0] / 2), int(camera[0] + self.size[0] / 2))
-            y = random.randint(int(camera[1] - self.size[1] / 2), int(camera[1] + self.size[1] / 2))
+            x = random.randint(0, self.size[0])
+            y = random.randint(0, self.size[1])
             pygame.draw.circle(
-                pygame.display.get_surface(),
+                self.image,
                 particle_color,
                 (x, y),
                 1
