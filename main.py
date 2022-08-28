@@ -8,13 +8,16 @@ logger = logging.getLogger(__name__)
 
 
 def _init_logger():
-    os.makedirs(os.path.join(os.path.abspath(
-        os.path.dirname(__file__)), "logs"), exist_ok=True)
-    log_path = os.path.join(os.path.abspath(
-        os.path.dirname(__file__)), "logs", "game.log")
+    log_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "logs")
+    os.makedirs(log_path, exist_ok=True)
+    log_file_path = os.path.join(log_path, "game.log")
     logging.basicConfig(
         handlers=[RotatingFileHandler(
-            log_path, backupCount=10, maxBytes=1000000, encoding="utf-8")],
+            log_file_path, 
+            backupCount=10, 
+            maxBytes=1000000, 
+            encoding="utf-8"
+        )],
         level=logging.DEBUG,
         format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
         datefmt='%Y-%m-%d:%H:%M:%S',
