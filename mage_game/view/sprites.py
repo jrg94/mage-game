@@ -1,3 +1,4 @@
+import random
 import pygame
 from mage_game.view.camera import CharacterCameraGroup
 from pygame import RLEACCEL
@@ -165,10 +166,12 @@ class ProjectileSprite(pygame.sprite.Sprite):
         Animates the projectile. 
         """
         if self.charge_frames > 0:
+            self._particle_animation()
             self._charge_animation()
             self._trajectory_animation()
         elif self.cast_frames > 0:
             self._shoot_animation()
+            self._particle_animation()
         elif self.cast_frames == 0:
             self.kill()
 
@@ -193,13 +196,45 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.rect.centery = self.position[1]
         self._draw_projectile()
         
-    def _trajectory_animation(self):
-        pygame.draw.line(
+    def _trajectory_animation(self) -> None:
+        """
+        Draws a line between the projectile and the mouse.
+        """
+        pygame.draw.aaline(
             pygame.display.get_surface(), 
             self.source.element().color, 
             pygame.math.Vector2(self.rect.center) - self.camera_group.offset, 
             pygame.mouse.get_pos()
         )
+        
+    def _particle_animation(self) -> None:
+        """
+        Adds a nice particle effect to the spells.
+        """
+        particle_count = (self.size[0] * self.size[1]) // 10
+        particle_color = self._get_adjacent_color(self.source.element().color)
+        for _ in range(particle_count):
+            x = random.randint(self.rect.topleft[0], self.rect.topleft[0] + self.size[0])
+            y = random.randint(self.rect.topleft[1], self.rect.topleft[1] + self.size[1])
+            pygame.draw.circle(
+                pygame.display.get_surface(),
+                particle_color,
+                (x, y),
+                1
+            )
+            
+    def _get_adjacent_color(self, rgb: tuple, degrees: int = 30) -> pygame.Color:
+        """
+        Computes a nearby color (default +30 degrees).
+
+        :param rgb: a color in RGB
+        :param degrees: the degrees away out of 360, defaults to 30
+        :return: a pygame color object with the color shifted by degrees
+        """
+        color = pygame.Color(rgb[0], rgb[1], rgb[2])
+        h = (color.hsla[0] + degrees) % 360
+        color.hsla = (h, color.hsla[1], color.hsla[2], color.hsla[3])
+        return color
 
     def _draw_projectile(self) -> None:
         """
