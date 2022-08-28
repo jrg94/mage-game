@@ -14,11 +14,13 @@ class PlayerSprite(pygame.sprite.Sprite):
     """
     The player sprite class.
 
-    :param position: the initial position of the player
-    :param source: the player data reference
+    :param tuple position: the initial position of the player
+    :param tuple size: the size of the sprite
+    :param Character source: the player data reference
+    :param CharacterCameraGroup camera_group: the set of sprites rendered from the POV of the player
     """
 
-    def __init__(self, position: tuple, size: tuple, source: Character, camera_group: CharacterCameraGroup):
+    def __init__(self, position: tuple, size: tuple, source: Character, camera_group: CharacterCameraGroup) -> None:
         logger.debug(f"Created player sprite on screen at {position} with dimensions {size}.")
         super().__init__()
         self.size = size
@@ -35,8 +37,8 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         Moves the character based on key presses.
 
-        :param fps: frames per second
-        :param meters_to_pixels: the meters per pixel conversion rate
+        :param int fps: frames per second
+        :param float meters_to_pixels: the meters per pixel conversion rate
         """
         keys = pygame.key.get_pressed()
         movement = (self.source._speed * meters_to_pixels) / fps
@@ -51,7 +53,10 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
 
-    def update(self):
+    def update(self) -> None:
+        """
+        Updates the player sprite on each frame.
+        """
         self.frame += .1
         if self.frame >= len(self.sprites):
             self.frame = 0
