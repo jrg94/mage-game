@@ -86,7 +86,12 @@ class DummySprite(pygame.sprite.Sprite):
         self.last_hit: int | None = None
         self.alpha = 255
 
-    def hit(self, damage: int):
+    def hit(self, damage: int) -> None:
+        """
+        Registers a hit of the DummySprite. 
+
+        :param damage: the amount of damage to remove from the DummySprite.
+        """
         self.last_hit = damage
         self.alpha = 255
         self.source._hp -= damage
@@ -94,6 +99,9 @@ class DummySprite(pygame.sprite.Sprite):
             self.kill()
 
     def update(self):
+        """
+        Updates the DummySprite every frame.
+        """
         if self.last_hit:
             self.image.fill((123, 0, 123))
             damage = self.smallfont.render(
@@ -125,9 +133,17 @@ class ProjectileSprite(pygame.sprite.Sprite):
     :param size: the size of the projectile in xy pixels
     :param source: the reference data for the projectile
     :param camera_group: the camera group that this projectile belongs to
+    :param enemy_group: the group of enemies that could be hit
     """
 
-    def __init__(self, origin: pygame.sprite.Sprite, size: tuple, source: Projectile, camera_group: CharacterCameraGroup):
+    def __init__(
+            self, 
+            origin: pygame.sprite.Sprite, 
+            size: tuple, 
+            source: Projectile, 
+            camera_group: CharacterCameraGroup, 
+            enemy_group: CharacterCameraGroup
+        ):
         super().__init__()
 
         # Storing inputs
@@ -135,6 +151,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.size = size
         self.origin = origin
         self.camera_group = camera_group
+        self.enemy_group = enemy_group
 
         # Generating key sprite attributes
         self.image = pygame.Surface(size)
@@ -152,7 +169,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.radius_per_frame = 0
 
         # Collision variables
-        self.hit = []
+        self.sprites_hit = []
 
     def cast(self, charge_frames: int, cast_frames: int, speed: int, radius: int):
         """
@@ -178,6 +195,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
             self._charge_animation()
         elif self.cast_frames > 0:
             self._shoot_animation()
+            self._compute_collisions()
         elif self.cast_frames == 0:
             self.kill()
 
@@ -282,6 +300,22 @@ class ProjectileSprite(pygame.sprite.Sprite):
         velocityx = self.speed * math.cos(radians)
         velocityy = self.speed * math.sin(radians)
         return pygame.math.Vector2(velocityx, velocityy)
+    
+    def _compute_collisions(self):
+        """
+        Determines if this projectile has hit any of the enemies.
+        """
+        enemies: list[pygame.sprite.Sprite] = pygame.sprite.spritecollide(
+            self, 
+            self.enemy_group, 
+            False
+        )
+        for enemy in enemies:
+            if enemy not in self.sprites_hit:
+                damage: AttributeTracking = self.source.get_tracking(SpellAttribute.DAMAGE)
+                damage.trigger_event()
+                self.sprites_hit.append(enemy)
+                enemy.hit(damage.effective_value())
 
 
 class PaletteSprite(pygame.sprite.Sprite):

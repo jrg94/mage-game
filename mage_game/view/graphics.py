@@ -116,7 +116,6 @@ class GraphicalView(object):
 
         # Process non-event based game logic
         self.player.move(self.fps, self.meters_to_pixels)
-        self.handle_collisions()
         self.model.character._palette.update_cooldowns(self.clock.get_time())
         self.model.character._palette.update_casting_time(self.clock.get_time())
 
@@ -146,7 +145,8 @@ class GraphicalView(object):
                 self.player,
                 (diameter, diameter),
                 source,
-                self.play_sprites
+                self.play_sprites,
+                self.enemy_sprites
             )
             projectile.cast(
                 charge_frames,
@@ -180,24 +180,6 @@ class GraphicalView(object):
         self.ui_sprites.update()
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
-
-    def handle_collisions(self):
-        """
-        A helper method that detects when projectiles intersect
-        with enemies. 
-        """
-        for attack in self.attack_sprites:
-            enemies: list[pygame.sprite.Sprite] = pygame.sprite.spritecollide(
-                attack, 
-                self.enemy_sprites, 
-                False
-            )
-            for enemy in enemies:
-                if enemy not in attack.hit:
-                    damage: AttributeTracking = attack.source.get_tracking(SpellAttribute.DAMAGE)
-                    damage.trigger_event()
-                    attack.hit.append(enemy)
-                    enemy.hit(damage.effective_value())
 
     def _init_misc_play_sprites(self) -> CharacterCameraGroup:
         """
