@@ -91,10 +91,10 @@ class ProjectileSprite(pygame.sprite.Sprite):
     A generic projectile sprite class that can be used to 
     create different types of projectiles.
     
-    :param position: the initial position of the sprite
+    :param origin: the reference sprite for the projectile
+    :param size: the size of the projectile in xy pixels
     :param source: the reference data for the projectile
-    :param trajectory: the initial xy velocity of the projectile in pixels
-    :param meters_to_pixels: a scaling factor for converting model data
+    :param camera_group: the camera group that this projectile belongs to
     """
 
     def __init__(self, origin: pygame.sprite.Sprite, size: tuple, source: Projectile, camera_group: CharacterCameraGroup):
@@ -128,7 +128,10 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Launches the projectile.
         
-        :param frames: the number of frames to spend channeling the attack
+        :param charge_frames: the number of frames to spend channeling the attack
+        :param cast_frames: the number of frames the spell will spend flying
+        :param speed: the speed at which the spell will move across the screen in pixels/frame
+        :param radius: the radius of the spell in pixels
         """
         pygame.draw.circle(self.image, self.source.element().color, self.image.get_rect().center, 1)
         self.charge_frames = charge_frames
@@ -141,19 +144,25 @@ class ProjectileSprite(pygame.sprite.Sprite):
         Animates the projectile. 
         """
         if self.charge_frames > 0:
-            self._charge()
+            self._charge_animation()
         elif self.cast_frames > 0:
             self._shoot()
         elif self.cast_frames == 0:
             self.kill()
             
-    def _charge(self):
+    def _charge_animation(self):
+        """
+        Runs the spell charge animation.
+        """
         self._position_projectile()
         self._draw_projectile()
         self.charge_frames -= 1
         self.radius += self.radius_per_frame
         
     def _shoot(self):
+        """
+        Runs the spell launching animation.
+        """
         self.cast_frames -= 1
         if not self.trajectory:
             self.trajectory = self._compute_trajectory()
@@ -162,7 +171,10 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.rect.centery = self.position[1]
         self._draw_projectile()
             
-    def _draw_projectile(self):
+    def _draw_projectile(self) -> None:
+        """
+        Draws the projectile spell.
+        """
         self.image.fill((255, 255, 255))
         pygame.draw.circle(
             self.image, 
@@ -171,7 +183,10 @@ class ProjectileSprite(pygame.sprite.Sprite):
             self.radius
         )
         
-    def _position_projectile(self):
+    def _position_projectile(self) -> None:
+        """
+        Positions the projectile away from the player. 
+        """
         dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
         dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
