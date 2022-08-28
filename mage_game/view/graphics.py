@@ -206,7 +206,7 @@ class GraphicalView(object):
             if attack.charge_frames > 0:
                 pygame.draw.line(
                     self.screen, 
-                    (255, 255, 0), 
+                    attack.source.element().color, 
                     pygame.math.Vector2(attack.rect.center) - self.play_sprites.offset, 
                     pygame.mouse.get_pos()
                 )

@@ -1,7 +1,6 @@
 import pygame
-from pygame import RLEACCEL
-
 from mage_game.view.camera import CharacterCameraGroup
+from pygame import RLEACCEL
 
 from ..model import *
 
@@ -9,7 +8,7 @@ from ..model import *
 class PlayerSprite(pygame.sprite.Sprite):
     """
     The player sprite class.
-    
+
     :param position: the initial position of the player
     :param source: the player data reference
     """
@@ -24,7 +23,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=position)
         self.source = source
         self.frame = 0
-        
+
     def move(self, fps: int, meters_to_pixels: float):
         keys = pygame.key.get_pressed()
         movement = (self.source._speed * meters_to_pixels) / fps
@@ -41,7 +40,10 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.frame += .1
         if self.frame >= len(self.sprites):
             self.frame = 0
-        self.image = pygame.transform.scale(self.sprites[int(self.frame)], self.size)
+        self.image = pygame.transform.scale(
+            self.sprites[int(self.frame)], 
+            self.size
+        )
         if pygame.mouse.get_pos()[0] < (self.rect.center[0] - self.camera_group.offset[0]):
             self.image = pygame.transform.flip(self.image, True, False)
 
@@ -75,14 +77,22 @@ class DummySprite(pygame.sprite.Sprite):
         if self.last_hit:
             self.image.fill((123, 0, 123))
             damage = self.smallfont.render(
-                str(self.last_hit), True, (255, 0, 0))
+                str(self.last_hit), 
+                True, 
+                (255, 0, 0)
+            )
             text_surface = pygame.Surface((50, 50))
             text_surface.fill((255, 0, 0))
             text_surface.set_colorkey((255, 0, 0), RLEACCEL)
-            text_surface.blit(damage, damage.get_rect(center=text_surface.get_rect().center))
+            text_surface.blit(
+                damage, 
+                damage.get_rect(center=text_surface.get_rect().center)
+            )
             text_surface.set_alpha(self.alpha)
-            self.image.blit(text_surface, text_surface.get_rect(
-                center=self.image.get_rect().center))
+            self.image.blit(
+                text_surface, 
+                text_surface.get_rect(center=self.image.get_rect().center)
+            )
             self.alpha //= 1.1
 
 
@@ -90,7 +100,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
     """
     A generic projectile sprite class that can be used to 
     create different types of projectiles.
-    
+
     :param origin: the reference sprite for the projectile
     :param size: the size of the projectile in xy pixels
     :param source: the reference data for the projectile
@@ -99,19 +109,19 @@ class ProjectileSprite(pygame.sprite.Sprite):
 
     def __init__(self, origin: pygame.sprite.Sprite, size: tuple, source: Projectile, camera_group: CharacterCameraGroup):
         super().__init__()
-        
+
         # Storing inputs
         self.source = source
         self.size = size
         self.origin = origin
         self.camera_group = camera_group
-                
+
         # Generating key sprite attributes
         self.image = pygame.Surface(size)
         self.image.fill((255, 255, 255))
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.image.get_rect(center=origin.rect.center)
-        
+
         # Frame calculations
         self.charge_frames = 0
         self.cast_frames = 0
@@ -120,25 +130,30 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.position = None
         self.radius = 0
         self.radius_per_frame = 0
-        
+
         # Collision variables
         self.hit = []
-    
+
     def cast(self, charge_frames: int, cast_frames: int, speed: int, radius: int):
         """
         Launches the projectile.
-        
+
         :param charge_frames: the number of frames to spend channeling the attack
         :param cast_frames: the number of frames the spell will spend flying
         :param speed: the speed at which the spell will move across the screen in pixels/frame
         :param radius: the radius of the spell in pixels
         """
-        pygame.draw.circle(self.image, self.source.element().color, self.image.get_rect().center, 1)
+        pygame.draw.circle(
+            self.image, 
+            self.source.element().color, 
+            self.image.get_rect().center, 
+            1
+        )
         self.charge_frames = charge_frames
         self.cast_frames = cast_frames
         self.speed = speed
         self.radius_per_frame = radius / self.cast_frames
-        
+
     def update(self):
         """
         Animates the projectile. 
@@ -149,7 +164,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
             self._shoot()
         elif self.cast_frames == 0:
             self.kill()
-            
+
     def _charge_animation(self):
         """
         Runs the spell charge animation.
@@ -158,7 +173,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self._draw_projectile()
         self.charge_frames -= 1
         self.radius += self.radius_per_frame
-        
+
     def _shoot(self):
         """
         Runs the spell launching animation.
@@ -170,19 +185,19 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
         self._draw_projectile()
-            
+
     def _draw_projectile(self) -> None:
         """
         Draws the projectile spell.
         """
         self.image.fill((255, 255, 255))
         pygame.draw.circle(
-            self.image, 
-            self.source.element().color, 
-            self.image.get_rect().center, 
+            self.image,
+            self.source.element().color,
+            self.image.get_rect().center,
             self.radius
         )
-        
+
     def _position_projectile(self) -> None:
         """
         Positions the projectile away from the player. 
@@ -195,7 +210,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.position = pygame.math.Vector2((x, y))
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
-                
+
     def _compute_trajectory(self) -> pygame.math.Vector2:
         """
         A handy method for computing the path of a projectile in components
@@ -218,7 +233,7 @@ class PaletteSprite(pygame.sprite.Sprite):
     :param position: the location of the palette on the screen
     :param source: the palette model for reference
     """
-    
+
     def __init__(self, position: tuple, source: Palette):
         super().__init__()
         self.image = pygame.Surface((200, 50))
@@ -273,7 +288,7 @@ class ProgressSprite(pygame.sprite.Sprite):
     :param position: the initial position of the progress sprite
     :param source: the reference data for generating the progress sprite
     """
-    
+
     def __init__(self, position: tuple, source: Character):
         super().__init__()
         self.image = pygame.Surface((600, 400))
@@ -304,8 +319,8 @@ class ProgressSprite(pygame.sprite.Sprite):
             if top + len(spell._attributes.values()) * text.get_height() > 400:
                 left += 300
                 top = 0
-        
-        
+
+
 class StateText(pygame.sprite.Sprite):
     """
     A generic text sprite. Can be used to render text.
@@ -314,7 +329,7 @@ class StateText(pygame.sprite.Sprite):
     :param font: the font used to render the text
     :param text: the text to render
     """
-    
+
     def __init__(self, position: tuple, font: pygame.font.Font, text: str, anchor: str = "topleft") -> None:
         super().__init__()
         self.font = font
