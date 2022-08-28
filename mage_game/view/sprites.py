@@ -166,7 +166,6 @@ class ProjectileSprite(pygame.sprite.Sprite):
         Animates the projectile. 
         """
         if self.charge_frames > 0:
-            self._particle_animation()
             self._charge_animation()
             self._trajectory_animation()
         elif self.cast_frames > 0:
@@ -211,8 +210,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Adds a nice particle effect to the spells.
         """
-        particle_count = (self.size[0] * self.size[1]) // 10
-        particle_color = self._get_adjacent_color(self.source.element().color)
+        particle_count = (self.size[0] * self.size[1]) // 20
+        particle_color = self._get_adjacent_color(self.source.element().color, random.randint(25, 35))
         for _ in range(particle_count):
             x = random.randint(self.rect.topleft[0], self.rect.topleft[0] + self.size[0])
             y = random.randint(self.rect.topleft[1], self.rect.topleft[1] + self.size[1])
