@@ -166,8 +166,9 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         if self.charge_frames > 0:
             self._charge_animation()
+            self._trajectory_animation()
         elif self.cast_frames > 0:
-            self._shoot()
+            self._shoot_animation()
         elif self.cast_frames == 0:
             self.kill()
 
@@ -180,7 +181,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.charge_frames -= 1
         self.radius += self.radius_per_frame
 
-    def _shoot(self):
+    def _shoot_animation(self):
         """
         Runs the spell launching animation.
         """
@@ -191,6 +192,14 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
         self._draw_projectile()
+        
+    def _trajectory_animation(self):
+        pygame.draw.line(
+            pygame.display.get_surface(), 
+            self.source.element().color, 
+            pygame.math.Vector2(self.rect.center) - self.camera_group.offset, 
+            pygame.mouse.get_pos()
+        )
 
     def _draw_projectile(self) -> None:
         """
