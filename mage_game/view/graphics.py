@@ -292,7 +292,14 @@ class GraphicalView(object):
         group.add(play_text)
         
         # Setting up palette
-        self.palette = PaletteSprite((0, 0), self.model.character._palette)
+        self.palette = PaletteSprite(
+            (10, 10), 
+            (
+                pygame.display.get_window_size()[0] / 8,
+                pygame.display.get_window_size()[1] / 20
+            ),
+            self.model.character._palette
+        )
         group.add(self.palette)
         
         return group

@@ -283,14 +283,16 @@ class PaletteSprite(pygame.sprite.Sprite):
     :param source: the palette model for reference
     """
 
-    def __init__(self, position: tuple, source: Palette):
+    def __init__(self, position: tuple, size: tuple, source: Palette):
         super().__init__()
-        self.image = pygame.Surface((200, 50))
+        self.size = size
+        self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)
         self.source: Palette = source
 
     def update(self):
         left = 0
+        line_width = 2
         self.image.fill((0, 0, 0))
         active_spell = self.source.get_active_item().get_spell()
         for i, item in enumerate(self.source.get_items()):
@@ -299,34 +301,38 @@ class PaletteSprite(pygame.sprite.Sprite):
                 pygame.draw.rect(
                     self.image,
                     (0, 255, 0),
-                    (left, 0, 50, 50),
-                    width=2
+                    (left, 0, self.size[0] / 4, self.size[1]),
+                    width=line_width
                 )
             # Draw white square otherwise
             else:
                 pygame.draw.rect(
                     self.image,
                     (255, 255, 255),
-                    (left, 0, 50, 50),
-                    width=2
+                    (left, 0, self.size[0] / 4, self.size[1]),
+                    width=line_width
                 )
             # Show cast time
             if self.source.get_remaining_casting_time() > 0:
-                ratio = self.source.get_remaining_casting_time(
-                ) / (active_spell.get_attribute(SpellAttribute.CAST_TIME) * 1000)
+                ratio = self.source.get_remaining_casting_time() / (active_spell.get_attribute(SpellAttribute.CAST_TIME) * 1000)
                 pygame.draw.rect(
                     self.image,
                     (155, 155, 155, 100),
-                    (left + 2, 2, 46, 46 * ratio)
+                    (
+                        left + line_width, 
+                        line_width, 
+                        self.size[0] / 4 - line_width * 2, 
+                        (self.size[1] - line_width * 2) * ratio
+                    )
                 )
             # Add colored circle to square
             pygame.draw.circle(
                 self.image,
                 item.get_spell().element().color,
-                (left + 25, 25),
-                10
+                (left + self.size[0] / 8, self.size[1] / 2),
+                self.size[1] / 4
             )
-            left += 50
+            left += self.size[0] / 4
 
 
 class ProgressSprite(pygame.sprite.Sprite):
