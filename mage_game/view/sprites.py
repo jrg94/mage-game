@@ -148,10 +148,10 @@ class ProjectileSprite(pygame.sprite.Sprite):
             self.kill()
             
     def _charge(self):
-        self.charge_frames -= 1
-        self.radius += self.radius_per_frame
         self._position_projectile()
         self._draw_projectile()
+        self.charge_frames -= 1
+        self.radius += self.radius_per_frame
         
     def _shoot(self):
         self.cast_frames -= 1
@@ -175,10 +175,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
         dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
         dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
-        print(self.image.get_size())
-        x = self.origin.image.get_bounding_rect().width * math.cos(radians) + self.origin.rect.centerx
-        y = self.origin.image.get_bounding_rect().width * math.sin(radians) + self.origin.rect.centery
-        print((x, y), self.origin.rect.center)
+        x = self.origin.image.get_width() * math.cos(radians) + self.origin.rect.centerx
+        y = self.origin.image.get_width() * math.sin(radians) + self.origin.rect.centery
         self.position = pygame.math.Vector2((x, y))
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]

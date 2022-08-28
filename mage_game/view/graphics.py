@@ -124,6 +124,7 @@ class GraphicalView(object):
         self.screen.fill((0, 0, 0))
         self.play_sprites.update()
         self.play_sprites.camera_draw(self.player)
+        self.handle_attack_trajectories()
         self.ui_sprites.update()
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
@@ -198,6 +199,17 @@ class GraphicalView(object):
                     damage.trigger_event()
                     attack.hit.append(enemy)
                     enemy.hit(damage.effective_value())
+                    
+    def handle_attack_trajectories(self):
+        for attack in self.attack_sprites:
+            attack: ProjectileSprite
+            if attack.charge_frames > 0:
+                pygame.draw.line(
+                    self.screen, 
+                    (255, 255, 0), 
+                    pygame.math.Vector2(attack.rect.center) - self.play_sprites.offset, 
+                    pygame.mouse.get_pos()
+                )
 
     def _init_misc_play_sprites(self) -> CharacterCameraGroup:
         """
