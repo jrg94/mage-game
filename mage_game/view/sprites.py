@@ -22,6 +22,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.sprites[0], self.size)
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.image.get_rect(center=position)
+        self.position = pygame.math.Vector2(position)
         self.source = source
         self.frame = 0
 
@@ -35,13 +36,15 @@ class PlayerSprite(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         movement = (self.source._speed * meters_to_pixels) / fps
         if keys[pygame.K_w]:
-            self.rect.centery -= movement
+            self.position[1] -= movement
         if keys[pygame.K_a]:
-            self.rect.centerx -= movement
+            self.position[0] -= movement
         if keys[pygame.K_s]:
-            self.rect.centery += movement
+            self.position[1] += movement
         if keys[pygame.K_d]:
-            self.rect.centerx += movement
+            self.position[0] += movement
+        self.rect.centerx = self.position[0]
+        self.rect.centery = self.position[1]
 
     def update(self):
         self.frame += .1
@@ -51,7 +54,7 @@ class PlayerSprite(pygame.sprite.Sprite):
             self.sprites[int(self.frame)], 
             self.size
         )
-        if pygame.mouse.get_pos()[0] < (self.rect.center[0] - self.camera_group.offset[0]):
+        if pygame.mouse.get_pos()[0] < (self.position[0] - self.camera_group.offset[0]):
             self.image = pygame.transform.flip(self.image, True, False)
 
 
@@ -127,7 +130,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.image = pygame.Surface(size)
         self.image.fill((255, 255, 255))
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect(center=origin.rect.center)
+        self.rect = self.image.get_rect()
 
         # Frame calculations
         self.charge_frames = 0
@@ -135,7 +138,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.speed = 0
         self.trajectory = None
         self.position = None
-        self.radius = 0
+        self.radius = 1
         self.radius_per_frame = 0
 
         # Collision variables
@@ -150,16 +153,11 @@ class ProjectileSprite(pygame.sprite.Sprite):
         :param speed: the speed at which the spell will move across the screen in pixels/frame
         :param radius: the radius of the spell in pixels
         """
-        pygame.draw.circle(
-            self.image, 
-            self.source.element().color, 
-            self.image.get_rect().center, 
-            1
-        )
         self.charge_frames = charge_frames
         self.cast_frames = cast_frames
         self.speed = speed
         self.radius_per_frame = radius / self.cast_frames
+        self._draw_projectile()
 
     def update(self):
         """
@@ -167,10 +165,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         if self.charge_frames > 0:
             self._charge_animation()
-            self._trajectory_animation()
         elif self.cast_frames > 0:
             self._shoot_animation()
-            self._particle_animation()
         elif self.cast_frames == 0:
             self.kill()
 
@@ -178,8 +174,9 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Runs the spell charge animation.
         """
-        self._position_projectile()
         self._draw_projectile()
+        self._position_projectile()
+        self._trajectory_animation()
         self.charge_frames -= 1
         self.radius += self.radius_per_frame
 
@@ -187,13 +184,14 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Runs the spell launching animation.
         """
-        self.cast_frames -= 1
         if not self.trajectory:
             self.trajectory = self._compute_trajectory()
         self.position += self.trajectory
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
         self._draw_projectile()
+        self._particle_animation()
+        self.cast_frames -= 1
         
     def _trajectory_animation(self) -> None:
         """
@@ -202,8 +200,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
         pygame.draw.aaline(
             pygame.display.get_surface(), 
             self.source.element().color, 
-            pygame.math.Vector2(self.rect.center) - self.camera_group.offset, 
-            pygame.mouse.get_pos()
+            pygame.mouse.get_pos(),
+            self.position - self.camera_group.offset, 
         )
         
     def _particle_animation(self) -> None:
@@ -212,10 +210,10 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         particle_count = (self.size[0] * self.size[1]) // 20
         particle_color = self._get_adjacent_color(self.source.element().color, random.randint(25, 35))
-        camera = self.rect.topleft - self.camera_group.offset
+        camera = self.position - self.camera_group.offset
         for _ in range(particle_count):
-            x = random.randint(camera[0], camera[0] + self.size[0])
-            y = random.randint(camera[1], camera[1] + self.size[1])
+            x = random.randint(int(camera[0] - self.size[0] / 2), int(camera[0] + self.size[0] / 2))
+            y = random.randint(int(camera[1] - self.size[1] / 2), int(camera[1] + self.size[1] / 2))
             pygame.draw.circle(
                 pygame.display.get_surface(),
                 particle_color,
@@ -252,11 +250,11 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Positions the projectile away from the player. 
         """
-        dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
-        dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
+        dx = pygame.mouse.get_pos()[0] - (self.origin.position[0] - self.camera_group.offset[0])
+        dy = pygame.mouse.get_pos()[1] - (self.origin.position[1] - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
-        x = self.origin.image.get_width() * math.cos(radians) + self.origin.rect.centerx
-        y = self.origin.image.get_width() * math.sin(radians) + self.origin.rect.centery
+        x = self.origin.image.get_width() * math.cos(radians) + self.origin.position[0]
+        y = self.origin.image.get_width() * math.sin(radians) + self.origin.position[1]
         self.position = pygame.math.Vector2((x, y))
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
@@ -268,8 +266,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
 
         :return: the trajectory of the projectile in xy components of pixels/frame
         """
-        dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
-        dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
+        dx = pygame.mouse.get_pos()[0] - (self.origin.position[0] - self.camera_group.offset[0])
+        dy = pygame.mouse.get_pos()[1] - (self.origin.position[1] - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
         velocityx = self.speed * math.cos(radians)
         velocityy = self.speed * math.sin(radians)

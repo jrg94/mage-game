@@ -115,8 +115,8 @@ class GraphicalView(object):
         """
 
         # Process non-event based game logic
-        self.handle_collisions()
         self.player.move(self.fps, self.meters_to_pixels)
+        self.handle_collisions()
         self.model.character._palette.update_cooldowns(self.clock.get_time())
         self.model.character._palette.update_casting_time(self.clock.get_time())
 
