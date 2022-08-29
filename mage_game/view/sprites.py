@@ -29,12 +29,12 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.sprites[0], self.size)
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.image.get_rect(center=position)
-        self.position = pygame.math.Vector2(position)
         self.source = source
         self.frame = 0
         self.fps = 0
         self.meters_to_pixels = 0
-
+        self.position = pygame.math.Vector2(position)
+        
     def prepare_player(self, fps: int, meters_to_pixels: float) -> None:
         """
         To avoid overloading the initialization of the player sprite,
@@ -55,15 +55,19 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param float meters_to_pixels: the meters per pixel conversion rate
         """
         keys = pygame.key.get_pressed()
-        movement = (self.source._speed * self.meters_to_pixels) / self.fps
+        movement = self.source._speed / self.fps
         if keys[pygame.K_w]:
-            self.position[1] -= movement
+            self.source.move_entity(0, -movement)
         if keys[pygame.K_a]:
-            self.position[0] -= movement
+            self.source.move_entity(-movement, 0)
         if keys[pygame.K_s]:
-            self.position[1] += movement
+            self.source.move_entity(0, movement)
         if keys[pygame.K_d]:
-            self.position[0] += movement
+            self.source.move_entity(movement, 0)
+        self.position = pygame.math.Vector2(
+            self.source.coordinates.x * self.meters_to_pixels,
+            self.source.coordinates.y * self.meters_to_pixels
+        )
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
 

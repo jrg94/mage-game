@@ -7,7 +7,7 @@ import random
 
 from ..eventmanager import *
 from .character import Character
-from .world import World
+from .world import Entity, World, WorldPoint
 
 
 class GameState(Enum):
@@ -59,13 +59,14 @@ class GameEngine:
         otherwise. 
         """
         self.character = Character.new_character()
-        self.enemies.extend([Enemy(1), Enemy(2)])
+        self.enemies.extend([Enemy(), Enemy()])
         self.world = World()
-        self.world.add_entity(self.character, (0, 0))
+        self.world.add_entity(self.character)
         for enemy in self.enemies:
             x = random.randint(-2500, 2500)
             y = random.randint(-2500, 2500)
-            self.world.add_entity(enemy, (x, y))
+            enemy.teleport_entity(x, y)
+            self.world.add_entity(enemy)
         
     def run(self) -> None:
         """
@@ -128,12 +129,11 @@ class StateMachine(object):
 
 
 @dataclass
-class Enemy:
+class Enemy(Entity):
     """
     The Enemy class represents enemy data.
 
     :param _hp: the health of the enemy
     """
 
-    _id: int
     _hp: int = 10

@@ -191,7 +191,7 @@ class GraphicalView(object):
         group = CharacterCameraGroup()
         
         # Setting up player
-        location = self.model.world.locate_entity(self.model.character)
+        location = self.model.world.locate_entity(self.model.character).as_tuple()
         location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
         self.player = PlayerSprite(
             location, 
@@ -215,7 +215,7 @@ class GraphicalView(object):
 
         # Setting up dummy enemies
         for enemy in self.model.enemies:
-            location = self.model.world.locate_entity(enemy)
+            location = self.model.world.locate_entity(enemy).as_tuple()
             location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
             dummy = DummySprite(location, enemy)
             group.add(dummy)

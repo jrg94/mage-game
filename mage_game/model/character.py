@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .world import Entity, WorldPoint
+
 from .magic import *
 
 
@@ -162,7 +164,7 @@ class Palette:
         return False
 
 @dataclass
-class Character:
+class Character(Entity):
     """
     The Character class represents the character data.
 
