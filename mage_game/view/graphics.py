@@ -1,4 +1,5 @@
 import math
+import logging
 
 import pygame
 
@@ -7,6 +8,8 @@ from mage_game.view.camera import CharacterCameraGroup
 from ..eventmanager import *
 from ..model import *
 from .sprites import *
+
+logger = logging.getLogger(__name__)
 
 
 class GraphicalView(object):
@@ -91,6 +94,10 @@ class GraphicalView(object):
         Render the game menu.
         """
         
+        logger.debug(
+            f"Rendering the game menu with an FPS of {self.clock.get_fps()}." 
+            f"The previous frame took {self.clock.get_time()} milliseconds."
+        )
         self.screen.fill((0, 0, 0))
         self.menu_sprites.update()
         self.menu_sprites.draw(self.screen)
@@ -101,6 +108,10 @@ class GraphicalView(object):
         Render the help screen.
         """
 
+        logger.debug(
+            f"Rendering the help menu with an FPS of {self.clock.get_fps()}." 
+            f"The previous frame took {self.clock.get_time()} milliseconds."
+        )
         self.screen.fill((0, 0, 0))
         self.help_sprites.update()
         self.help_sprites.draw(self.screen)
@@ -111,6 +122,10 @@ class GraphicalView(object):
         Render the game play.
         """
 
+        logger.debug(
+            f"Rendering the gameplay with an FPS of {self.clock.get_fps()}." 
+            f"The previous frame took {self.clock.get_time()} milliseconds."
+        )
         self.screen.fill((0, 0, 0))
         self.play_sprites.update()
         self.play_sprites.camera_draw(self.player)
