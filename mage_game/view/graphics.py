@@ -175,6 +175,7 @@ class GraphicalView(object):
         
         :param event: the input event that triggered this change in palette.
         """
+        
         if event.key in self.palette_keys:
             self.model.character.select_palette_item(int(event.char) - 1)
 
@@ -191,7 +192,7 @@ class GraphicalView(object):
         
         # Setting up player
         self.player = PlayerSprite(
-            self.screen.get_rect().center, 
+            self.screen.get_rect().topleft, 
             tuple(map(lambda x: x * self.meters_to_pixels, self.model.character._size)),
             self.model.character,
             group
@@ -212,7 +213,9 @@ class GraphicalView(object):
 
         # Setting up dummy enemies
         for enemy in self.model.enemies:
-            dummy = DummySprite((400, 400), enemy)
+            location = self.model.world.locate_entity(enemy)
+            location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
+            dummy = DummySprite(location, enemy)
             group.add(dummy)
             
         return group

@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
+import random
+
 
 from ..eventmanager import *
 from .character import Character
+from .world import World
 
 
 class GameState(Enum):
@@ -27,8 +30,9 @@ class GameEngine:
         self.event_manager.RegisterListener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
-        self.enemies: list[Enemy] = [Enemy()]
-        self.character = Character.new_character()
+        self.enemies: list[Enemy] = []
+        self.character: Character = None
+        self.world: World = None
 
     def notify(self, event: EventManager) -> None:
         """
@@ -49,6 +53,20 @@ class GameEngine:
                 # push a new state on the stack
                 self.state.push(event.state)
 
+    def load_game(self) -> None:
+        """
+        Loads game data, if it exists. Creates a new game
+        otherwise. 
+        """
+        self.character = Character.new_character()
+        self.enemies.extend([Enemy(), Enemy()])
+        self.world = World()
+        self.world.add_entity(self.character, (0, 0))
+        for enemy in self.enemies:
+            x = random.randint(0, 5000)
+            y = random.randint(0, 5000)
+            self.world.add_entity(enemy, (x, y))
+        
     def run(self) -> None:
         """
         Starts the game engine loop.
@@ -56,6 +74,7 @@ class GameEngine:
         This pumps a Tick event into the message queue for each loop.
         The loop ends when this object hears a QuitEvent in notify(). 
         """
+        self.load_game()
         self.running = True
         self.event_manager.Post(InitializeEvent())
         self.state.push(GameState.STATE_MENU)
