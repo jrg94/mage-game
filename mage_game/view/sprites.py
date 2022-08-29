@@ -32,8 +32,22 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.position = pygame.math.Vector2(position)
         self.source = source
         self.frame = 0
+        self.fps = 0
+        self.meters_to_pixels = 0
 
-    def move(self, fps: int, meters_to_pixels: float) -> None:
+    def prepare_player(self, fps: int, meters_to_pixels: float) -> None:
+        """
+        To avoid overloading the initialization of the player sprite,
+        I added this method to allow additional variables to be passed
+        to the sprite. 
+
+        :param fps: the number of frames per second
+        :param meters_to_pixels: the number of meters per frame
+        """
+        self.fps = fps
+        self.meters_to_pixels = meters_to_pixels
+
+    def _move(self) -> None:
         """
         Moves the character based on key presses.
 
@@ -41,7 +55,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param float meters_to_pixels: the meters per pixel conversion rate
         """
         keys = pygame.key.get_pressed()
-        movement = (self.source._speed * meters_to_pixels) / fps
+        movement = (self.source._speed * self.meters_to_pixels) / self.fps
         if keys[pygame.K_w]:
             self.position[1] -= movement
         if keys[pygame.K_a]:
@@ -57,6 +71,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         Updates the player sprite on each frame.
         """
+        self._move()
         self.frame += .1
         if self.frame >= len(self.sprites):
             self.frame = 0
@@ -171,7 +186,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         # Collision variables
         self.sprites_hit = []
 
-    def cast(self, charge_frames: int, cast_frames: int, speed: int, radius: int):
+    def cast(self, charge_frames: int, cast_frames: int, speed: int, radius: int) -> None:
         """
         Launches the projectile.
 
@@ -187,7 +202,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self._position_projectile()
         self._draw_projectile()
 
-    def update(self):
+    def update(self) -> None:
         """
         Animates the projectile. 
         """
@@ -199,7 +214,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         elif self.cast_frames == 0:
             self.kill()
 
-    def _charge_animation(self):
+    def _charge_animation(self) -> None:
         """
         Runs the spell charge animation.
         """
@@ -209,7 +224,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.charge_frames -= 1
         self.radius += self.radius_per_frame
 
-    def _shoot_animation(self):
+    def _shoot_animation(self) -> None:
         """
         Runs the spell launching animation.
         """
@@ -326,57 +341,101 @@ class PaletteSprite(pygame.sprite.Sprite):
     :param source: the palette model for reference
     """
 
-    def __init__(self, position: tuple, size: tuple, source: Palette):
+    def __init__(self, position: tuple, size: tuple, source: Palette, clock: pygame.time.Clock):
         super().__init__()
         self.size = size
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)
         self.source: Palette = source
+        self.clock: pygame.time.Clock = clock
+        self.font = pygame.font.Font(None, 24)
+        
+    def _manage_timers(self) -> None:
+        """
+        A helper method that updates the timers in the palette source.
+        """
+        self.source.update_casting_time(self.clock.get_time())
+        self.source.update_cooldowns(self.clock.get_time())
 
-    def update(self):
+    def _draw_palette_cell(self, cell: int, left: int, line_width: int, color: tuple) -> None:
+        """
+        A helper method for drawing the palette squares that showcase each 
+        cell in the palette.
+
+        :param cell: the index of the cell for labeling purposes
+        :param left: the topleft location of the cell
+        :param line_width: the thickness of the line for the cell
+        :param color: the color of the text and line for the cell
+        """
+        cell_index_text = self.font.render(str(cell + 1), True, color)
+        pygame.draw.rect(
+            self.image,
+            color,
+            (left, 0, self.size[0] / 4, self.size[1]),
+            width=line_width,
+            border_radius=5
+        )
+        self.image.blit(cell_index_text, (left + 5, 5))
+        
+    def _draw_cast_time_animation(self, left: int, line_width: int):
+        """
+        A helper method that draws the cast time animation on this palette.
+
+        :param left: _description_
+        :param line_width: _description_
+        """
+        cast_time = self.source.get_active_item().get_spell().get_attribute(SpellAttribute.CAST_TIME) * 1000
+        remaining_cast_time = self.source.get_remaining_casting_time()
+        ratio = remaining_cast_time / cast_time
+        pygame.draw.rect(
+            self.image,
+            (155, 155, 155, 100),
+            (
+                left + line_width, 
+                line_width, 
+                self.size[0] / 4 - line_width * 2, 
+                (self.size[1] - line_width * 2) * ratio
+            )
+        )
+        
+    def _draw_spell_icon(self, left, palette_item: PaletteItem):
+        """
+        A helper method that draws the spell icon on the palette.
+
+        :param left: the left position of the spell
+        :param palette_item: the palette item to draw
+        """
+        pygame.draw.circle(
+            self.image,
+            palette_item.get_spell().element().color,
+            (left + self.size[0] / 8, self.size[1] / 2),
+            self.size[1] / 4
+        )
+        
+    def _draw_palette(self):
+        """
+        A helper method that draws the current palette.
+        """
         left = 0
         line_width = 2
         self.image.fill((0, 0, 0))
-        active_spell = self.source.get_active_item().get_spell()
         for i, item in enumerate(self.source.get_items()):
-            # Draw green square for active item
-            if i == self.source.get_active_item_index():
-                pygame.draw.rect(
-                    self.image,
-                    (0, 255, 0),
-                    (left, 0, self.size[0] / 4, self.size[1]),
-                    width=line_width
-                )
-            # Draw white square otherwise
-            else:
-                pygame.draw.rect(
-                    self.image,
-                    (255, 255, 255),
-                    (left, 0, self.size[0] / 4, self.size[1]),
-                    width=line_width
-                )
-            # Show cast time
             if self.source.get_remaining_casting_time() > 0:
-                ratio = self.source.get_remaining_casting_time() / (active_spell.get_attribute(SpellAttribute.CAST_TIME) * 1000)
-                pygame.draw.rect(
-                    self.image,
-                    (155, 155, 155, 100),
-                    (
-                        left + line_width, 
-                        line_width, 
-                        self.size[0] / 4 - line_width * 2, 
-                        (self.size[1] - line_width * 2) * ratio
-                    )
-                )
-            # Add colored circle to square
-            pygame.draw.circle(
-                self.image,
-                item.get_spell().element().color,
-                (left + self.size[0] / 8, self.size[1] / 2),
-                self.size[1] / 4
-            )
+                self._draw_cast_time_animation(left, line_width)
+            self._draw_spell_icon(left, item)
+            if i == self.source.get_active_item_index():
+                self._draw_palette_cell(i, left, line_width, (0, 255, 0))
+            else:
+                self._draw_palette_cell(i, left, line_width, (255, 255, 255))
             left += self.size[0] / 4
 
+    def update(self):
+        """
+        The generic update method that occurs each frame.
+        """
+        self._manage_timers()
+        self._draw_palette()
+        
 
 class ProgressSprite(pygame.sprite.Sprite):
     """

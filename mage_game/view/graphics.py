@@ -73,27 +73,24 @@ class GraphicalView(object):
             if currentstate == GameState.STATE_HELP:
                 self.render_help()
             self.clock.tick(self.fps)
-        # TODO: keyboard and mouse events are two generic -> make them more specific like MoveEvent
         elif isinstance(event, KeyboardEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
-            # TODO: add scroll wheel event to zoom in and out
             if currentstate == GameState.STATE_PLAY:
-                if event.key in self.palette_keys:
-                    self.render_palette(event)
+                self.trigger_palette_switch_event(event)
         elif isinstance(event, MouseEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
             if currentstate == GameState.STATE_PLAY:
-                if event.button in self.cast_keys:
-                    self.render_cast()
+                self.trigger_cast_event(event)
 
     def render_menu(self):
         """
         Render the game menu.
         """
+        
         self.screen.fill((0, 0, 0))
         self.menu_sprites.update()
         self.menu_sprites.draw(self.screen)
@@ -114,12 +111,6 @@ class GraphicalView(object):
         Render the game play.
         """
 
-        # Process non-event based game logic
-        self.player.move(self.fps, self.meters_to_pixels)
-        self.model.character._palette.update_cooldowns(self.clock.get_time())
-        self.model.character._palette.update_casting_time(self.clock.get_time())
-
-        # Render the scene
         self.screen.fill((0, 0, 0))
         self.play_sprites.update()
         self.play_sprites.camera_draw(self.player)
@@ -127,20 +118,22 @@ class GraphicalView(object):
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
 
-    def render_cast(self):
+    def trigger_cast_event(self, event: MouseEvent):
         """
-        Render a spell cast.
+        Creates a projectile to be rendered.
         
         :param event: the input event that triggered this cast
         """
-        if self.model.character.cast():
-            # Create a projectile and cast it
+        if event.button in self.cast_keys and self.model.character.cast():
+            # Setup projectile variables
             source = self.model.character._palette.get_active_item().get_spell()
             projectile_speed = (source.get_attribute(SpellAttribute.SPEED) * self.meters_to_pixels) / self.fps 
             projectile_radius = source.get_attribute(SpellAttribute.RADIUS) * self.meters_to_pixels
             charge_frames = source.get_attribute(SpellAttribute.CAST_TIME) * self.fps
             cast_frames = (source.get_attribute(SpellAttribute.DISTANCE) / source.get_attribute(SpellAttribute.SPEED)) * self.fps
             diameter = math.ceil(projectile_radius * 2)
+            
+            # Create projectile
             projectile = ProjectileSprite(
                 self.player,
                 (diameter, diameter),
@@ -148,6 +141,8 @@ class GraphicalView(object):
                 self.play_sprites,
                 self.enemy_sprites
             )
+            
+            # Cast projectile
             projectile.cast(
                 charge_frames,
                 cast_frames,
@@ -159,27 +154,14 @@ class GraphicalView(object):
             self.attack_sprites.add(projectile)
             self.play_sprites.add(projectile)
 
-            # Render sprites
-            self.play_sprites.update()
-            self.play_sprites.camera_draw(self.player)
-            self.ui_sprites.update()
-            self.ui_sprites.draw(self.screen)
-
-            pygame.display.flip()
-
-    def render_palette(self, event: KeyboardEvent):
+    def trigger_palette_switch_event(self, event: KeyboardEvent):
         """
-        Render the palette.
+        Updates the palette to reflect the spell selection.
         
         :param event: the input event that triggered this change in palette.
         """
-        self.screen.fill((0, 0, 0))
-        self.model.character.select_palette_item(int(event.char) - 1)
-        self.play_sprites.update()
-        self.play_sprites.camera_draw(self.player)
-        self.ui_sprites.update()
-        self.ui_sprites.draw(self.screen)
-        pygame.display.flip()
+        if event.key in self.palette_keys:
+            self.model.character.select_palette_item(int(event.char) - 1)
 
     def _init_misc_play_sprites(self) -> CharacterCameraGroup:
         """
@@ -199,10 +181,10 @@ class GraphicalView(object):
             self.model.character,
             group
         )
+        self.player.prepare_player(self.fps, self.meters_to_pixels)
         group.add(self.player)
         
         return group
-        
         
     def _init_enemy_sprites(self) -> CharacterCameraGroup:
         """
@@ -219,7 +201,6 @@ class GraphicalView(object):
             group.add(dummy)
             
         return group
-    
     
     def _init_help_sprites(self) -> pygame.sprite.Group:
         """
@@ -280,7 +261,8 @@ class GraphicalView(object):
                 pygame.display.get_window_size()[0] / 8,
                 pygame.display.get_window_size()[1] / 20
             ),
-            self.model.character._palette
+            self.model.character._palette,
+            self.clock
         )
         group.add(self.palette)
         
