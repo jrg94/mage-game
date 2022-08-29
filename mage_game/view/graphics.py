@@ -191,8 +191,10 @@ class GraphicalView(object):
         group = CharacterCameraGroup()
         
         # Setting up player
+        location = self.model.world.locate_entity(self.model.character)
+        location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
         self.player = PlayerSprite(
-            self.screen.get_rect().topleft, 
+            location, 
             tuple(map(lambda x: x * self.meters_to_pixels, self.model.character._size)),
             self.model.character,
             group

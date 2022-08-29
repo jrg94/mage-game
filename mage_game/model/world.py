@@ -7,6 +7,12 @@ class World(dict):
     To keep things simple, one integer represents a millimeter.
     Therefore, the smallest unit of length in the game is
     a millimeter.
+    
+    Currently, this object is only used to setup initial conditions
+    of the world. It would be nice for this to be a permanent
+    representation of the world but using coordinates as keys
+    seems somewhat silly for that. This will probably be more
+    useful for level development than a live model of the world.
     """
     
     def add_entity(self, entity: object, location: tuple[int, int]):
@@ -19,6 +25,12 @@ class World(dict):
         self[location] = entity
         
     def locate_entity(self, entity) -> tuple | None:
+        """
+        Performs a reverse dictionary lookup.
+
+        :param entity: an object to be looked up
+        :return: the location of that object if it exists. None, otherwise.
+        """
         for key, value in self.items():
             if entity == value:
                 return key

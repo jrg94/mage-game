@@ -59,12 +59,12 @@ class GameEngine:
         otherwise. 
         """
         self.character = Character.new_character()
-        self.enemies.extend([Enemy(), Enemy()])
+        self.enemies.extend([Enemy(1), Enemy(2)])
         self.world = World()
         self.world.add_entity(self.character, (0, 0))
         for enemy in self.enemies:
-            x = random.randint(0, 5000)
-            y = random.randint(0, 5000)
+            x = random.randint(-2500, 2500)
+            y = random.randint(-2500, 2500)
             self.world.add_entity(enemy, (x, y))
         
     def run(self) -> None:
@@ -135,4 +135,5 @@ class Enemy:
     :param _hp: the health of the enemy
     """
 
+    _id: int
     _hp: int = 10
