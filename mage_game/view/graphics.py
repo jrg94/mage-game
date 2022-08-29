@@ -17,7 +17,7 @@ class GraphicalView(object):
     :param model: the model.
     """
 
-    def __init__(self, event_manager: EventManager, model: GameEngine):
+    def __init__(self, event_manager: EventManager, model: GameEngine) -> None:
         self.event_manager: EventManager = event_manager
         self.event_manager.RegisterListener(self)
         self.model: GameEngine = model
@@ -50,7 +50,7 @@ class GraphicalView(object):
         self.movement_keys = (pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_w)
         self.cast_keys = (pygame.BUTTON_LEFT,)
 
-    def notify(self, event: Event):
+    def notify(self, event: Event) -> None:
         """
         Receive events posted to the message queue. 
 
@@ -86,7 +86,7 @@ class GraphicalView(object):
             if currentstate == GameState.STATE_PLAY:
                 self.trigger_cast_event(event)
 
-    def render_menu(self):
+    def render_menu(self) -> None:
         """
         Render the game menu.
         """
@@ -96,7 +96,7 @@ class GraphicalView(object):
         self.menu_sprites.draw(self.screen)
         pygame.display.flip()
         
-    def render_help(self):
+    def render_help(self) -> None:
         """
         Render the help screen.
         """
@@ -106,7 +106,7 @@ class GraphicalView(object):
         self.help_sprites.draw(self.screen)
         pygame.display.flip()
 
-    def render_play(self):
+    def render_play(self) -> None:
         """
         Render the game play.
         """
@@ -118,7 +118,7 @@ class GraphicalView(object):
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
 
-    def trigger_cast_event(self, event: MouseEvent):
+    def trigger_cast_event(self, event: MouseEvent) -> None:
         """
         Creates a projectile to be rendered.
         
@@ -227,10 +227,11 @@ class GraphicalView(object):
     
     def _init_menu_sprites(self) -> pygame.sprite.Group:
         """
-        A helper methof for creating all the menu sprites.
+        A helper method for creating all the menu sprites.
 
         :return: a group of menu sprites
         """
+        
         group = pygame.sprite.Group()
         
         menu_text = StateText(
@@ -244,6 +245,12 @@ class GraphicalView(object):
         return group
     
     def _init_ui_sprites(self) -> pygame.sprite.Group:
+        """
+        A helper method for creating all of the UI sprites during the game.
+
+        :return: a group of UI sprites
+        """
+        
         group = pygame.sprite.Group()
         
         # Setting up play text
@@ -270,7 +277,7 @@ class GraphicalView(object):
     
     def initialize(self):
         """
-        Set up the pygame graphical display and loads graphical resources.
+        Sets up the pygame graphical display and loads graphical resources.
         """
 
         pygame.init()
