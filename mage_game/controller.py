@@ -18,6 +18,9 @@ class MouseAndKeyboard:
         def __init__(self):
             # Game buttons
             self.close_game = [pygame.K_ESCAPE]
+            self.select_palette_item = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]
+            self.move_character = [pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_w]
+            self.cast = [pygame.BUTTON_LEFT]
             
             # Menu buttons
             self.open_menu = [pygame.K_TAB]
@@ -103,8 +106,8 @@ class MouseAndKeyboard:
             self.event_manager.post(StateChangeEvent(GameState.STATE_MENU))
         elif event.key in self.bindings.open_help:
             self.event_manager.post(StateChangeEvent(GameState.STATE_HELP))
-        else:
-            self.event_manager.post(KeyboardEvent(event.key, event.unicode))
+        elif event.key in self.bindings.select_palette_item:
+            self.event_manager.post(PaletteSelectEvent(self.bindings.select_palette_item.index(event.key)))
 
     def key_down_intro(self, event: pygame.event.Event):
         """
@@ -122,7 +125,8 @@ class MouseAndKeyboard:
 
         :param event: the mouse press event object
         """
-        self.event_manager.post(MouseEvent(event.button, event.pos))
+        if event.key in self.bindings.cast:
+            self.event_manager.post(CastEvent(event.pos))
 
     def mouse_down_intro(self, event: pygame.event.Event):
         """

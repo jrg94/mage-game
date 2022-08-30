@@ -1,6 +1,5 @@
 import math
 import logging
-from sre_parse import State
 
 import pygame
 
@@ -50,11 +49,6 @@ class GraphicalView(object):
         # Menu sprite groups
         self.help_sprites: pygame.sprite.Group = None
         self.menu_sprites: pygame.sprite.Group = None
-        
-        # Actions keys
-        self.palette_keys = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4)
-        self.movement_keys = (pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_w)
-        self.cast_keys = (pygame.BUTTON_LEFT,)
 
     def notify(self, event: Event) -> None:
         """
@@ -87,14 +81,24 @@ class GraphicalView(object):
             currentstate = self.model.state.peek()
             if currentstate == GameState.STATE_PLAY:
                 self.trigger_palette_switch_event(event)
+        elif isinstance(event, CastEvent):
+            if not self.isinitialized:
+                return
+            currentstate = self.model.state.peek()
+            if currentstate == GameState.STATE_PLAY:
+                self.trigger_cast_event()
+        elif isinstance(event, PaletteSelectEvent):
+            if not self.isinitialized:
+                return
+            currentstate = self.model.state.peek()
+            if currentstate == GameState.STATE_PLAY:
+                self.trigger_palette_switch_event(event)
         elif isinstance(event, MouseEvent):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
             if currentstate == GameState.STATE_INTRO:
                 self.trigger_menuing(event)
-            if currentstate == GameState.STATE_PLAY:
-                self.trigger_cast_event(event)
 
     def render_title_screen(self) -> None:
         """
@@ -153,13 +157,13 @@ class GraphicalView(object):
         self.ui_sprites.draw(self.screen)
         pygame.display.flip()
 
-    def trigger_cast_event(self, event: MouseEvent) -> None:
+    def trigger_cast_event(self) -> None:
         """
         Creates a projectile to be rendered.
         
         :param event: the input event that triggered this cast
         """
-        if event.button in self.cast_keys and self.model.character.cast():
+        if self.model.character.cast():
             # Setup projectile variables
             source = self.model.character._palette.get_active_item().get_spell()
             projectile_speed = (source.get_attribute(SpellAttribute.SPEED) * self.meters_to_pixels) / self.fps 
@@ -194,15 +198,14 @@ class GraphicalView(object):
             self._load_game()
             self.event_manager.post(StateChangeEvent(GameState.STATE_PLAY))
 
-    def trigger_palette_switch_event(self, event: KeyboardEvent):
+    def trigger_palette_switch_event(self, event: PaletteSelectEvent):
         """
         Updates the palette to reflect the spell selection.
         
         :param event: the input event that triggered this change in palette.
         """
         
-        if event.key in self.palette_keys:
-            self.model.character.select_palette_item(int(event.char) - 1)
+        self.model.character.select_palette_item(event.item)
 
     def _init_misc_play_sprites(self) -> CharacterCameraGroup:
         """

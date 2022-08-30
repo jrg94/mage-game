@@ -61,6 +61,32 @@ class KeyboardEvent(Event):
 
     def __str__(self):
         return f'{self.name} (key={self.key}): char={self.char}'
+    
+    
+class CastEvent(Event):
+    """
+    A spell cast event.
+    """
+    
+    def __init__(self, click_pos: tuple):
+        self.name = "Cast Event"
+        self.click_pos = click_pos
+
+    def __str__(self):
+        return f"{self.name}: clickpos={self.click_pos}"
+    
+    
+class PaletteSelectEvent(Event):
+    """
+    A palette item select event.
+    """
+
+    def __init__(self, palette_item: int):
+        self.name = "Palette Item Select Event"
+        self.item = palette_item
+
+    def __str__(self):
+        return f'{self.name} (key={self.item})'
 
 
 class InitializeEvent(Event):
