@@ -53,7 +53,7 @@ class GameEngine:
                 # push a new state on the stack
                 self.state.push(event.state)
 
-    def load_game(self) -> None:
+    def new_game(self) -> None:
         """
         Loads game data, if it exists. Creates a new game
         otherwise. 
@@ -75,10 +75,9 @@ class GameEngine:
         This pumps a Tick event into the message queue for each loop.
         The loop ends when this object hears a QuitEvent in notify(). 
         """
-        self.load_game()
         self.running = True
         self.event_manager.Post(InitializeEvent())
-        self.state.push(GameState.STATE_MENU)
+        self.state.push(GameState.STATE_INTRO)
         while self.running:
             newTick = TickEvent()
             self.event_manager.Post(newTick)

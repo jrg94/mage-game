@@ -69,6 +69,8 @@ class GraphicalView(object):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
+            if currentstate == GameState.STATE_INTRO:
+                self.render_title_screen()
             if currentstate == GameState.STATE_MENU:
                 self.render_menu()
             if currentstate == GameState.STATE_PLAY:
@@ -88,6 +90,17 @@ class GraphicalView(object):
             currentstate = self.model.state.peek()
             if currentstate == GameState.STATE_PLAY:
                 self.trigger_cast_event(event)
+
+    def render_title_screen(self) -> None:
+        """
+        Renders the title screen.
+        """
+        
+        self.screen.fill((0, 120, 80))
+        game_name = self.font.render("Mage Game", True, (255, 255, 255))
+        game_name_rect = game_name.get_rect(center=self.screen.get_rect().center)
+        self.screen.blit(game_name, game_name_rect)
+        pygame.display.flip()
 
     def render_menu(self) -> None:
         """
@@ -295,6 +308,19 @@ class GraphicalView(object):
         
         return group
     
+    def _load_game(self):
+        self.meters_to_pixels = self.screen.get_width() / self.model.character._view_width
+
+        # Create sprite groups
+        self.attack_sprites = CharacterCameraGroup()
+        self.enemy_sprites = self._init_enemy_sprites()
+        self.play_sprites = self._init_misc_play_sprites()
+        self.play_sprites.add(*self.enemy_sprites.sprites())
+        self.play_sprites.add(*self.attack_sprites.sprites())
+        self.ui_sprites = self._init_ui_sprites()
+        self.help_sprites = self._init_help_sprites()
+        self.menu_sprites = self._init_menu_sprites()
+    
     def initialize(self):
         """
         Sets up the pygame graphical display and loads graphical resources.
@@ -308,18 +334,7 @@ class GraphicalView(object):
         self.screen = pygame.display.set_mode((0, 0))
         self.clock = pygame.time.Clock()
         self.fps = 30
-        self.meters_to_pixels = self.screen.get_width() / self.model.character._view_width
         self.font = pygame.font.Font(None, 40)
-
-        # Create sprite groups
-        self.attack_sprites = CharacterCameraGroup()
-        self.enemy_sprites = self._init_enemy_sprites()
-        self.play_sprites = self._init_misc_play_sprites()
-        self.play_sprites.add(*self.enemy_sprites.sprites())
-        self.play_sprites.add(*self.attack_sprites.sprites())
-        self.ui_sprites = self._init_ui_sprites()
-        self.help_sprites = self._init_help_sprites()
-        self.menu_sprites = self._init_menu_sprites()
         
         # Declaring the view initialized
         self.isinitialized = True
