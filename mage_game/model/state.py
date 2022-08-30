@@ -1,16 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from enum import Enum, auto
 import random
-
+from dataclasses import dataclass
+from enum import Enum, auto
 
 from ..eventmanager import *
+from .bindings import Bindings
 from .character import Character
-from .world import Entity, World, WorldPoint
+from .world import Entity, World
 
 
 class GameState(Enum):
+    """
+    A helpful enum for determining the current state
+    of the game.
+    """
+    
     STATE_INTRO = auto()
     STATE_MENU = auto()
     STATE_HELP = auto()
@@ -33,6 +38,7 @@ class GameEngine:
         self.enemies: list[Enemy] = None
         self.character: Character = None
         self.world: World = None
+        self.bindings: Bindings = Bindings()
 
     def notify(self, event: EventManager) -> None:
         """

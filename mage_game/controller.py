@@ -9,27 +9,6 @@ class MouseAndKeyboard:
     Handles keyboard input.
     """
 
-    class Bindings:
-        """
-        An inner class for defining key bindings using easy to read names.
-        This object should be saved with the game state to preserve user settings.
-        """
-
-        def __init__(self):
-            # Game buttons
-            self.close_game = [pygame.K_ESCAPE]
-            self.select_palette_item = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4]
-            self.move_character = [pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_w]
-            self.cast = [pygame.BUTTON_LEFT]
-            
-            # Menu buttons
-            self.open_menu = [pygame.K_TAB]
-            self.close_menu = [pygame.K_TAB]
-            
-            # Help buttons
-            self.open_help = [pygame.K_F1]
-            self.close_help = [pygame.K_ESCAPE, pygame.K_F1]
-
     def __init__(self, event_manager: EventManager, model: GameEngine):
         """
         evManager (EventManager): Allows posting messages to the event queue.
@@ -38,7 +17,6 @@ class MouseAndKeyboard:
         self.event_manager = event_manager
         event_manager.register_listener(self)
         self.model = model
-        self.bindings = MouseAndKeyboard.Bindings()
 
     def notify(self, event: pygame.event.Event):
         """
@@ -77,9 +55,9 @@ class MouseAndKeyboard:
         :param event: the key press event
         """
 
-        if event.key in self.bindings.close_game:
+        if event.key in self.model.bindings.close_game:
             self.event_manager.post(QuitEvent())
-        elif event.key in self.bindings.close_menu:
+        elif event.key in self.model.bindings.close_menu:
             self.event_manager.post(StateChangeEvent(None))
 
     def key_down_help(self, event: pygame.event.Event):
@@ -91,7 +69,7 @@ class MouseAndKeyboard:
         :param event: the key press event
         """
 
-        if event.key in self.bindings.close_help:
+        if event.key in self.model.bindings.close_help:
             self.event_manager.post(StateChangeEvent(None))
 
     def key_down_play(self, event: pygame.event.Event):
@@ -102,12 +80,12 @@ class MouseAndKeyboard:
 
         :param event: the key press event
         """
-        if event.key in self.bindings.open_menu:
+        if event.key in self.model.bindings.open_menu:
             self.event_manager.post(StateChangeEvent(GameState.STATE_MENU))
-        elif event.key in self.bindings.open_help:
+        elif event.key in self.model.bindings.open_help:
             self.event_manager.post(StateChangeEvent(GameState.STATE_HELP))
-        elif event.key in self.bindings.select_palette_item:
-            self.event_manager.post(PaletteSelectEvent(self.bindings.select_palette_item.index(event.key)))
+        elif event.key in self.model.bindings.select_palette_item:
+            self.event_manager.post(PaletteSelectEvent(self.model.bindings.select_palette_item.index(event.key)))
 
     def key_down_intro(self, event: pygame.event.Event):
         """
@@ -116,7 +94,7 @@ class MouseAndKeyboard:
 
         :param event: the key press event
         """
-        if event.key == self.bindings.close_game:
+        if event.key == self.model.bindings.close_game:
             self.event_manager.post(StateChangeEvent(None))
 
     def mouse_down_play(self, event: pygame.event.Event):
@@ -125,7 +103,7 @@ class MouseAndKeyboard:
 
         :param event: the mouse press event object
         """
-        if event.button in self.bindings.cast:
+        if event.button in self.model.bindings.cast:
             self.event_manager.post(CastEvent())
 
     def mouse_down_intro(self, event: pygame.event.Event):
