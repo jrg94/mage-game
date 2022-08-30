@@ -68,12 +68,11 @@ class CastEvent(Event):
     A spell cast event.
     """
     
-    def __init__(self, click_pos: tuple):
+    def __init__(self):
         self.name = "Cast Event"
-        self.click_pos = click_pos
 
     def __str__(self):
-        return f"{self.name}: clickpos={self.click_pos}"
+        return f"{self.name}"
     
     
 class PaletteSelectEvent(Event):

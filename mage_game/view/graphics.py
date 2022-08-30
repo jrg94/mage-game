@@ -56,55 +56,92 @@ class GraphicalView(object):
 
         :param event: the event.
         """
-
         if isinstance(event, InitializeEvent):
             self.initialize()
-        elif isinstance(event, QuitEvent):
-            self.isinitialized = False
-            pygame.quit()
-        elif isinstance(event, TickEvent):
-            if not self.isinitialized:
-                return
-            currentstate = self.model.state.peek()
-            if currentstate == GameState.STATE_INTRO:
-                self.render_title_screen()
-            if currentstate == GameState.STATE_MENU:
-                self.render_menu()
-            if currentstate == GameState.STATE_PLAY:
-                self.render_play()
-            if currentstate == GameState.STATE_HELP:
-                self.render_help()
-            self.clock.tick(self.fps)
-        elif isinstance(event, KeyboardEvent):
-            if not self.isinitialized:
-                return
-            currentstate = self.model.state.peek()
-            if currentstate == GameState.STATE_PLAY:
-                self.trigger_palette_switch_event(event)
-        elif isinstance(event, CastEvent):
-            if not self.isinitialized:
-                return
-            currentstate = self.model.state.peek()
-            if currentstate == GameState.STATE_PLAY:
-                self.trigger_cast_event()
-        elif isinstance(event, PaletteSelectEvent):
-            if not self.isinitialized:
-                return
-            currentstate = self.model.state.peek()
-            if currentstate == GameState.STATE_PLAY:
-                self.trigger_palette_switch_event(event)
-        elif isinstance(event, MouseEvent):
-            if not self.isinitialized:
-                return
-            currentstate = self.model.state.peek()
-            if currentstate == GameState.STATE_INTRO:
-                self.trigger_menuing(event)
+            return
+        if self.isinitialized:
+            if isinstance(event, QuitEvent):
+                self._handle_quit_event()
+            elif isinstance(event, TickEvent):
+                self._handle_tick_event()
+            elif isinstance(event, CastEvent):
+                self._handle_cast_event()
+            elif isinstance(event, PaletteSelectEvent):
+                self._handle_palette_select_event(event)
+            elif isinstance(event, MouseEvent):
+                self._handle_mouse_event(event)
+                
+    def _handle_quit_event(self):
+        """
+        A helper method for processing quit events.
+        """
+        self.isinitialized = False
+        pygame.quit()
+    
+    def _handle_tick_event(self):
+        """
+        A helper method for processing tick events.
+        As the game is running, tick events will trigger
+        different render methods.
+        """
+        current_state = self.model.state.peek()
+        if current_state == GameState.STATE_INTRO:
+            self.render_title_screen()
+        if current_state == GameState.STATE_MENU:
+            self.render_menu()
+        if current_state == GameState.STATE_PLAY:
+            self.render_play()
+        if current_state == GameState.STATE_HELP:
+            self.render_help()
+        self.clock.tick(self.fps)
+        
+    def _handle_cast_event(self):
+        """
+        A helper method for processing cast events.
+        Cast events can be triggered in a variety of ways
+        but should always result to a spell being cast, 
+        if possible.
+        """
+        current_state = self.model.state.peek()
+        if current_state == GameState.STATE_PLAY:
+            self.trigger_cast_event()
+            
+    def _handle_palette_select_event(self, event: PaletteSelectEvent):
+        """
+        A helper method for processing palette select events.
+        Palette select events are triggered when a user selects
+        a spell using the proper key binding.
+
+        :param event: the palette select event object
+        """
+        current_state = self.model.state.peek()
+        if current_state == GameState.STATE_PLAY:
+            self.trigger_palette_switch_event(event)
+            
+    def _handle_mouse_event(self, event: MouseEvent):
+        """
+        A helper method for processing mouse events.
+        A mouse event occurs when the user presses 
+        a mouse button. Right now, mouse events are 
+        used to register button presses. More specific
+        button press events should be crafted when
+        possible.
+
+        :param event: the mouse press event object
+        """
+        current_state = self.model.state.peek()
+        if current_state == GameState.STATE_INTRO:
+            self.trigger_menuing(event)
 
     def render_title_screen(self) -> None:
         """
         Renders the title screen.
         """
         
+        logger.debug(
+            f"Rendering the title screen with an FPS of {self.clock.get_fps()}." 
+            f"The previous frame took {self.clock.get_time()} milliseconds."
+        )
         self.screen.fill((0, 120, 80))
         game_name = self.font.render("Mage Game", True, (255, 255, 255))
         game_name_rect = game_name.get_rect(center=self.screen.get_rect().center)
