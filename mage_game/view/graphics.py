@@ -1,5 +1,6 @@
 import math
 import logging
+from sre_parse import State
 
 import pygame
 
@@ -34,6 +35,7 @@ class GraphicalView(object):
         self.font: pygame.font.Font = None
         
         # Sprites
+        self.play_button: ButtonSprite = None
         self.player: PlayerSprite = None
         self.palette: PaletteSprite = None
         self.help: ProgressSprite = None
@@ -43,6 +45,7 @@ class GraphicalView(object):
         self.play_sprites: CharacterCameraGroup = None
         self.enemy_sprites: CharacterCameraGroup = None
         self.ui_sprites: pygame.sprite.Group = None
+        self.title_screen_sprites: pygame.sprite.Group = None
         
         # Menu sprite groups
         self.help_sprites: pygame.sprite.Group = None
@@ -88,6 +91,8 @@ class GraphicalView(object):
             if not self.isinitialized:
                 return
             currentstate = self.model.state.peek()
+            if currentstate == GameState.STATE_INTRO:
+                self.trigger_menuing(event)
             if currentstate == GameState.STATE_PLAY:
                 self.trigger_cast_event(event)
 
@@ -100,6 +105,8 @@ class GraphicalView(object):
         game_name = self.font.render("Mage Game", True, (255, 255, 255))
         game_name_rect = game_name.get_rect(center=self.screen.get_rect().center)
         self.screen.blit(game_name, game_name_rect)
+        self.title_screen_sprites.update()
+        self.title_screen_sprites.draw(self.screen)
         pygame.display.flip()
 
     def render_menu(self) -> None:
@@ -181,6 +188,11 @@ class GraphicalView(object):
             # Add projectile to sprite group
             self.attack_sprites.add(projectile)
             self.play_sprites.add(projectile)
+            
+    def trigger_menuing(self, event: MouseEvent):
+        if self.play_button.detect_press(event):
+            self._load_game()
+            self.event_manager.Post(StateChangeEvent(GameState.STATE_PLAY))
 
     def trigger_palette_switch_event(self, event: KeyboardEvent):
         """
@@ -308,7 +320,23 @@ class GraphicalView(object):
         
         return group
     
+    def _init_title_screen_sprites(self) -> pygame.sprite.Group:
+        group = pygame.sprite.Group()
+        
+        self.play_button = ButtonSprite(
+            (self.screen.get_rect().centerx, self.screen.get_rect().centery + 50), 
+            self.font, 
+            "Play"
+        )
+        group.add(self.play_button)
+        
+        return group
+    
     def _load_game(self):
+        # Start a fresh game
+        self.model.new_game()
+        
+        # Initialize some global variables
         self.meters_to_pixels = self.screen.get_width() / self.model.character._view_width
 
         # Create sprite groups
@@ -335,6 +363,9 @@ class GraphicalView(object):
         self.clock = pygame.time.Clock()
         self.fps = 30
         self.font = pygame.font.Font(None, 40)
+        
+        # Initialize title screen
+        self.title_screen_sprites = self._init_title_screen_sprites()
         
         # Declaring the view initialized
         self.isinitialized = True

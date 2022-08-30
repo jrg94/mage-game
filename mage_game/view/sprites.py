@@ -496,3 +496,19 @@ class StateText(pygame.sprite.Sprite):
         self.font = font
         self.image = self.font.render(text, True, (0, 255, 0))
         self.rect = self.image.get_rect(**{anchor: position})
+        
+class ButtonSprite(pygame.sprite.Sprite):
+    
+    def __init__(self, position: tuple, font: pygame.font.Font, text: str) -> None:
+        super().__init__()
+        self.font = font
+        self.text_sprite = StateText((0, 0), font, text)
+        self.image = pygame.Surface(self.text_sprite.image.get_size())
+        self.rect = self.image.get_rect(center=position)
+        self.image.blit(self.text_sprite.image, self.text_sprite.rect)
+        
+    def detect_press(self, event: MouseEvent):
+        return self.rect.collidepoint(event.click_pos) and event.button == 1
+            
+        
+    

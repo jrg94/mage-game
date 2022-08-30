@@ -42,7 +42,11 @@ class MouseAndKeyboard:
                         if currentstate == GameState.STATE_HELP:
                             self.key_down_help(event)
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.mouse_down_play(event)
+                    currentstate = self.model.state.peek()
+                    if currentstate == GameState.STATE_PLAY:
+                        self.mouse_down_play(event)
+                    if currentstate == GameState.STATE_INTRO:
+                        self.mouse_down_intro(event)
 
     def key_down_menu(self, event):
         """
@@ -81,4 +85,7 @@ class MouseAndKeyboard:
         """
         Handles play mouse events.
         """
+        self.evManager.Post(MouseEvent(event.button, event.pos))
+        
+    def mouse_down_intro(self, event):
         self.evManager.Post(MouseEvent(event.button, event.pos))
