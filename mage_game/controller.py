@@ -125,7 +125,7 @@ class MouseAndKeyboard:
 
         :param event: the mouse press event object
         """
-        if event.key in self.bindings.cast:
+        if event.button in self.bindings.cast:
             self.event_manager.post(CastEvent(event.pos))
 
     def mouse_down_intro(self, event: pygame.event.Event):
