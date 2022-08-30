@@ -498,14 +498,34 @@ class StateText(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(**{anchor: position})
         
 class ButtonSprite(pygame.sprite.Sprite):
+    """
+    A handy class for making buttons.
+    """
     
-    def __init__(self, position: tuple, font: pygame.font.Font, text: str) -> None:
+    def __init__(self, position: tuple, font: pygame.font.Font, text: str, color: tuple | str = "black") -> None:
         super().__init__()
         self.font = font
-        self.text_sprite = StateText((0, 0), font, text)
-        self.image = pygame.Surface(self.text_sprite.image.get_size())
+        self.size_plus_padding = tuple(coord + 10 for coord in self.font.size(text))
+        self.image = pygame.Surface(self.size_plus_padding)
+        self.image.set_colorkey("white", RLEACCEL)
         self.rect = self.image.get_rect(center=position)
-        self.image.blit(self.text_sprite.image, self.text_sprite.rect)
+        self.text_surface = self.font.render(text, True, color)
+        self.text_rect = self.text_surface.get_rect(center=self.image.get_rect().center)
         
-    def detect_press(self, event: MouseEvent):
+    def detect_press(self, event: MouseEvent) -> bool:
+        """
+        A handy method for checking if a mouse event has triggered this button. 
+
+        :param event: a mouse event object
+        :return: True if this button was pressed; False, otherwise.
+        """
         return self.rect.collidepoint(event.click_pos) and event.button == 1
+    
+    def update(self) -> None:
+        self.image.fill((255, 255, 255))
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
+            pygame.draw.rect(self.image, "gray47", self.image.get_rect(), border_radius=8)
+        else:
+            pygame.draw.rect(self.image, "gray70", self.image.get_rect(), border_radius=8)
+        pygame.draw.rect(self.image, "black", self.image.get_rect(), border_radius=8, width=1)
+        self.image.blit(self.text_surface, self.text_rect)

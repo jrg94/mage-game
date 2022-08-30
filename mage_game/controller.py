@@ -94,7 +94,7 @@ class MouseAndKeyboard:
 
         :param event: the key press event
         """
-        if event.key == self.model.bindings.close_game:
+        if event.key in self.model.bindings.close_game:
             self.event_manager.post(StateChangeEvent(None))
 
     def mouse_down_play(self, event: pygame.event.Event):
