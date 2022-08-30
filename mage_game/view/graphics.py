@@ -23,7 +23,7 @@ class GraphicalView(object):
 
     def __init__(self, event_manager: EventManager, model: GameEngine) -> None:
         self.event_manager: EventManager = event_manager
-        self.event_manager.RegisterListener(self)
+        self.event_manager.register_listener(self)
         self.model: GameEngine = model
         
         # Graphics variables
@@ -192,7 +192,7 @@ class GraphicalView(object):
     def trigger_menuing(self, event: MouseEvent):
         if self.play_button.detect_press(event):
             self._load_game()
-            self.event_manager.Post(StateChangeEvent(GameState.STATE_PLAY))
+            self.event_manager.post(StateChangeEvent(GameState.STATE_PLAY))
 
     def trigger_palette_switch_event(self, event: KeyboardEvent):
         """
