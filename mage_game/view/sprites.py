@@ -522,6 +522,9 @@ class ButtonSprite(pygame.sprite.Sprite):
         return self.rect.collidepoint(event.click_pos) and event.button == 1
     
     def update(self) -> None:
+        """
+        Visually updates the button based on mouse position.
+        """
         self.image.fill((255, 255, 255))
         if self.rect.collidepoint(pygame.mouse.get_pos()):
             pygame.draw.rect(self.image, "gray47", self.image.get_rect(), border_radius=8)
