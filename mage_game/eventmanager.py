@@ -47,20 +47,6 @@ class MouseEvent(Event):
 
     def __str__(self):
         return f"{self.name}: clickpos={self.click_pos}, button={self.button}"
-
-
-class KeyboardEvent(Event):
-    """
-    Keyboard input event.
-    """
-
-    def __init__(self, key: int, unicode_char: str):
-        self.name = "Keyboard Input Event"
-        self.key = key
-        self.char = unicode_char
-
-    def __str__(self):
-        return f'{self.name} (key={self.key}): char={self.char}'
     
     
 class CastEvent(Event):

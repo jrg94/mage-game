@@ -30,7 +30,7 @@ class GameEngine:
         self.event_manager.register_listener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
-        self.enemies: list[Enemy] = []
+        self.enemies: list[Enemy] = None
         self.character: Character = None
         self.world: World = None
 
@@ -59,7 +59,7 @@ class GameEngine:
         otherwise. 
         """
         self.character = Character.new_character()
-        self.enemies.extend([Enemy(), Enemy()])
+        self.enemies = [Enemy(), Enemy()]
         self.world = World()
         self.world.add_entity(self.character)
         for enemy in self.enemies:

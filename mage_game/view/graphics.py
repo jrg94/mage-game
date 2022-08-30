@@ -71,14 +71,14 @@ class GraphicalView(object):
             elif isinstance(event, MouseEvent):
                 self._handle_mouse_event(event)
                 
-    def _handle_quit_event(self):
+    def _handle_quit_event(self) -> None:
         """
         A helper method for processing quit events.
         """
         self.isinitialized = False
         pygame.quit()
     
-    def _handle_tick_event(self):
+    def _handle_tick_event(self) -> None:
         """
         A helper method for processing tick events.
         As the game is running, tick events will trigger
@@ -95,7 +95,7 @@ class GraphicalView(object):
             self.render_help()
         self.clock.tick(self.fps)
         
-    def _handle_cast_event(self):
+    def _handle_cast_event(self) -> None:
         """
         A helper method for processing cast events.
         Cast events can be triggered in a variety of ways
@@ -106,7 +106,7 @@ class GraphicalView(object):
         if current_state == GameState.STATE_PLAY:
             self.trigger_cast_event()
             
-    def _handle_palette_select_event(self, event: PaletteSelectEvent):
+    def _handle_palette_select_event(self, event: PaletteSelectEvent) -> None:
         """
         A helper method for processing palette select events.
         Palette select events are triggered when a user selects
@@ -118,7 +118,7 @@ class GraphicalView(object):
         if current_state == GameState.STATE_PLAY:
             self.trigger_palette_switch_event(event)
             
-    def _handle_mouse_event(self, event: MouseEvent):
+    def _handle_mouse_event(self, event: MouseEvent) -> None:
         """
         A helper method for processing mouse events.
         A mouse event occurs when the user presses 
@@ -231,6 +231,12 @@ class GraphicalView(object):
             self.play_sprites.add(projectile)
             
     def trigger_menuing(self, event: MouseEvent):
+        """
+        A menuing method for the title screen.
+
+        :param event: the mouse event object
+        """
+        
         if self.play_button.detect_press(event):
             self._load_game()
             self.event_manager.post(StateChangeEvent(GameState.STATE_PLAY))
@@ -361,6 +367,12 @@ class GraphicalView(object):
         return group
     
     def _init_title_screen_sprites(self) -> pygame.sprite.Group:
+        """
+        A helper method for creating all the title screen sprites.
+
+        :return: _description_
+        """
+        
         group = pygame.sprite.Group()
         
         self.play_button = ButtonSprite(
@@ -373,6 +385,11 @@ class GraphicalView(object):
         return group
     
     def _load_game(self):
+        """
+        Loads the game by initializing the model and
+        generating appropriate sprites.
+        """
+        
         # Start a fresh game
         self.model.new_game()
         

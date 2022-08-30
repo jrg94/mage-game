@@ -509,6 +509,3 @@ class ButtonSprite(pygame.sprite.Sprite):
         
     def detect_press(self, event: MouseEvent):
         return self.rect.collidepoint(event.click_pos) and event.button == 1
-            
-        
-    
