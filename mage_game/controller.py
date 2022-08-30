@@ -9,6 +9,24 @@ class MouseAndKeyboard:
     Handles keyboard input.
     """
 
+    class Bindings:
+        """
+        An inner class for defining key bindings using easy to read names.
+        This object should be saved with the game state to preserve user settings.
+        """
+
+        def __init__(self):
+            # Game buttons
+            self.close_game = [pygame.K_ESCAPE]
+            
+            # Menu buttons
+            self.open_menu = [pygame.K_TAB]
+            self.close_menu = [pygame.K_TAB]
+            
+            # Help buttons
+            self.open_help = [pygame.K_F1]
+            self.close_help = [pygame.K_ESCAPE, pygame.K_F1]
+
     def __init__(self, event_manager: EventManager, model: GameEngine):
         """
         evManager (EventManager): Allows posting messages to the event queue.
@@ -17,19 +35,19 @@ class MouseAndKeyboard:
         self.event_manager = event_manager
         event_manager.register_listener(self)
         self.model = model
+        self.bindings = MouseAndKeyboard.Bindings()
 
-    def notify(self, event):
+    def notify(self, event: pygame.event.Event):
         """
         Receive events posted to the message queue. 
+
+        :param event: the pygame event
         """
 
         if isinstance(event, TickEvent):
-            # Called for each game tick. We check our keyboard presses here.
             for event in pygame.event.get():
-                # handle window manager closing our window
                 if event.type == pygame.QUIT:
                     self.event_manager.post(QuitEvent())
-                # handle key down events
                 if event.type == pygame.KEYDOWN:
                     currentstate = self.model.state.peek()
                     if currentstate == GameState.STATE_MENU:
@@ -49,59 +67,66 @@ class MouseAndKeyboard:
 
     def key_down_menu(self, event: pygame.event.Event):
         """
-        Handles menu key events.
+        Handles menu key events. From the menu, the user
+        can either quit the game or return to play. See
+        bindings for defaults.
+
+        :param event: the key press event
         """
 
-        if event.key == pygame.K_ESCAPE:
+        if event.key in self.bindings.close_game:
             self.event_manager.post(QuitEvent())
-        if event.key == pygame.K_TAB:
+        elif event.key in self.bindings.close_menu:
             self.event_manager.post(StateChangeEvent(None))
-        if event.key == pygame.K_SPACE:
-            self.event_manager.post(StateChangeEvent(GameState.STATE_PLAY))
 
     def key_down_help(self, event: pygame.event.Event):
         """
-        Handles help key events.
+        Handles help key events. From the help page, the
+        user can only return to play. See bindings for
+        defaults.
+
+        :param event: the key press event
         """
 
-        if event.key in [pygame.K_ESCAPE, pygame.K_SPACE, pygame.K_RETURN]:
+        if event.key in self.bindings.close_help:
             self.event_manager.post(StateChangeEvent(None))
 
     def key_down_play(self, event: pygame.event.Event):
         """
-        Handles gameplay key events. While playing, pressing tab
-        should launch the menu. Meanwhile, pressing F1 should launch
-        the help menu. Other key presses are automatically passed to
-        the event manager to be used by the view directly.
+        Handles gameplay key events. While playing. the user
+        can launch the main menu, the help menu, or propogate
+        key presses to the view. See bindings for defaults.
+
+        :param event: the key press event
         """
-        if event.key == pygame.K_TAB:
+        if event.key in self.bindings.open_menu:
             self.event_manager.post(StateChangeEvent(GameState.STATE_MENU))
-        elif event.key == pygame.K_F1:
+        elif event.key in self.bindings.open_help:
             self.event_manager.post(StateChangeEvent(GameState.STATE_HELP))
         else:
             self.event_manager.post(KeyboardEvent(event.key, event.unicode))
-            
+
     def key_down_intro(self, event: pygame.event.Event):
         """
-        Handles title screen key events. At the title screen,
-        escape will close the game.
-        
+        Handles title screen key events. From the title screen,
+        the user can close the game. See key bindings for defaults.
+
         :param event: the key press event
         """
-        if event.key == pygame.K_ESCAPE:
+        if event.key == self.bindings.close_game:
             self.event_manager.post(StateChangeEvent(None))
 
     def mouse_down_play(self, event: pygame.event.Event):
         """
         Handles play mouse events.
-        
+
         :param event: the mouse press event object
         """
         self.event_manager.post(MouseEvent(event.button, event.pos))
-        
+
     def mouse_down_intro(self, event: pygame.event.Event):
         """
-        Handles mouse press events.
+        Handles mouse press events on the title screen.
 
         :param event: the mouse press event object
         """
