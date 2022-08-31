@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import logging
 from dataclasses import dataclass, field
@@ -19,6 +21,9 @@ class WorldPoint:
 
     def as_tuple(self):
         return (self.x, self.y)
+    
+    def convert(self, scale: float) -> WorldPoint:
+        return WorldPoint(self.x * scale, self.y * scale)
 
 
 @dataclass
@@ -42,6 +47,23 @@ class Entity:
         """
         self.coordinates.x += x_shift
         self.coordinates.y += y_shift
+        
+    def project_entity(self, x_shift: float, y_shift: float) -> tuple:
+        """
+        Performs a similar operation to move_entity() but does not
+        apply the change to the entity. Instead, returns the position
+        of the entity if it had been moved. Helpful for avoiding
+        collisions.
+
+        :param x_shift: the x-value to add to the x-coordinate
+        :param y_shift: the y-value to add to the y-coordinate
+        :return: the position of the entity if it were moved
+        """
+        
+        return (
+            self.coordinates.x + x_shift,
+            self.coordinates.y + y_shift
+        )
 
     def teleport_entity(self, x: float, y: float):
         """
@@ -53,7 +75,6 @@ class Entity:
         """
         self.coordinates.x = x
         self.coordinates.y = y
-
 
 @dataclass
 class World:

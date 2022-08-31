@@ -33,7 +33,6 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.frame: int = 0
         self.fps = 0
         self.meters_to_pixels = 0
-        self.position = None
         self.size = None
         self.image = None
         self.rect = None
@@ -49,51 +48,64 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         self.fps = fps
         self.meters_to_pixels = meters_to_pixels
-        self.position = self.model.world.locate_entity(self.model.character).as_tuple()
-        self.position = pygame.math.Vector2(self.position) * (self.meters_to_pixels / 1000)
         self.size = pygame.math.Vector2(self.model.character.size) * self.meters_to_pixels
         self.image: pygame.Surface = pygame.transform.scale(self.sprites[0], self.size)
         self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect(center=self.position)
         self.camera_group.add(self)
+        self.rect = self.image.get_rect(
+            center=self.model.character.coordinates.convert(self.meters_to_pixels / 1000).as_tuple()
+        )
+
 
     def _move(self) -> None:
         """
         Moves the character based on key presses.
-
-        :param int fps: frames per second
-        :param float meters_to_pixels: the meters per pixel conversion rate
         """
         movement = self.model.character._speed / self.fps
         keys = pygame.key.get_pressed()
-        self._process_keys(keys, movement)
-        self.position = pygame.math.Vector2(
-            self.model.character.coordinates.x * self.meters_to_pixels,
-            self.model.character.coordinates.y * self.meters_to_pixels
-        )
-        temp_rect_center = self.rect.center
-        self.rect.centerx = self.position[0]
-        self.rect.centery = self.position[1]
-        collisions = pygame.sprite.spritecollide(self, self.camera_group, False)
-        if len(collisions) != 1:
-            self.rect.center = temp_rect_center
-            self._process_keys(keys, -movement)
-            
-    
-    def _process_keys(self, keys: dict, movement: float):
-        # TODO: keys should not be processed here expicitly. Use bindings.
-        if self._process_direction(keys, self.model.bindings.move_up):
-            self.model.character.move_entity(0, -movement)
-        if self._process_direction(keys, self.model.bindings.move_left):
-            self.model.character.move_entity(-movement, 0)
-        if self._process_direction(keys, self.model.bindings.move_down):
-            self.model.character.move_entity(0, movement)
-        if self._process_direction(keys, self.model.bindings.move_right):
-            self.model.character.move_entity(movement, 0)
+        self._process_x_movement(keys, movement)
+        self._process_y_movement(keys, movement)
             
     def _process_direction(self, keys: dict, bindings: list[str]):
         return any(keys[pygame.key.key_code(binding)] for binding in bindings)
+    
+    def _process_x_movement(self, keys: dict, movement: float):
+        left = self._process_direction(keys, self.model.bindings.move_left)
+        right = self._process_direction(keys, self.model.bindings.move_right)
+        if left and right:
+            return
+        elif left:
+            location = self.model.character.project_entity(-movement, 0)
+            if not self._test_collision(location):
+                self.model.character.move_entity(-movement, 0)
+        elif right:
+            location = self.model.character.project_entity(movement, 0)
+            if not self._test_collision(location):
+                self.model.character.move_entity(movement, 0)
+                
+    def _process_y_movement(self, keys: dict, movement: float):
+        up = self._process_direction(keys, self.model.bindings.move_up)
+        down = self._process_direction(keys, self.model.bindings.move_down)
+        if up and down:
+            return
+        elif up:
+            location = self.model.character.project_entity(0, -movement)
+            if not self._test_collision(location):
+                self.model.character.move_entity(0, -movement)
+        elif down:
+            location = self.model.character.project_entity(0, movement)
+            if not self._test_collision(location):
+                self.model.character.move_entity(0, movement)
         
+    def _test_collision(self, location: tuple):
+        copy_rect = self.rect.copy()
+        location = pygame.math.Vector2(location) * self.meters_to_pixels
+        self.rect.centerx = location[0]
+        self.rect.centery = location[1]
+        if len(pygame.sprite.spritecollide(self, self.camera_group, False)) != 1:
+            self.rect.center = copy_rect.center
+            return True
+        return False
 
     def update(self) -> None:
         """
@@ -107,7 +119,7 @@ class PlayerSprite(pygame.sprite.Sprite):
             self.sprites[int(self.frame)], 
             self.size
         )
-        if pygame.mouse.get_pos()[0] < (self.position[0] - self.camera_group.offset[0]):
+        if pygame.mouse.get_pos()[0] < (self.rect.centerx - self.camera_group.offset[0]):
             self.image = pygame.transform.flip(self.image, True, False)
 
 
@@ -331,11 +343,11 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Positions the projectile away from the player. 
         """
-        dx = pygame.mouse.get_pos()[0] - (self.origin.position[0] - self.camera_group.offset[0])
-        dy = pygame.mouse.get_pos()[1] - (self.origin.position[1] - self.camera_group.offset[1])
+        dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
+        dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
-        x = self.origin.image.get_width() * math.cos(radians) + self.origin.position[0]
-        y = self.origin.image.get_width() * math.sin(radians) + self.origin.position[1]
+        x = self.origin.image.get_width() * math.cos(radians) + self.origin.rect.centerx
+        y = self.origin.image.get_width() * math.sin(radians) + self.origin.rect.centery
         self.position = pygame.math.Vector2((x, y))
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
@@ -347,8 +359,8 @@ class ProjectileSprite(pygame.sprite.Sprite):
 
         :return: the trajectory of the projectile in xy components of pixels/frame
         """
-        dx = pygame.mouse.get_pos()[0] - (self.origin.position[0] - self.camera_group.offset[0])
-        dy = pygame.mouse.get_pos()[1] - (self.origin.position[1] - self.camera_group.offset[1])
+        dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
+        dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
         velocityx = self.speed * math.cos(radians)
         velocityy = self.speed * math.sin(radians)
