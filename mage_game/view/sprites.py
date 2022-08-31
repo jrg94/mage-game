@@ -77,7 +77,15 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         return any(keys[pygame.key.key_code(binding)] for binding in bindings)
     
-    def _process_x_movement(self, keys: dict, movement: float):
+    def _process_x_movement(self, keys: dict, movement: float) -> None:
+        """
+        Explicitly handles movement along the x-axis. This is separated
+        from y-axis movement to ensure that the player can still move
+        in the y-direction even if there is collision in the x-direction.
+
+        :param keys: the keys pressed
+        :param movement: the amount of pixel movement in the x-direction
+        """
         left = self._process_direction(keys, self.model.bindings.move_left)
         right = self._process_direction(keys, self.model.bindings.move_right)
         if left and right:
@@ -91,7 +99,14 @@ class PlayerSprite(pygame.sprite.Sprite):
             if not self._test_collision(location):
                 self.model.character.move_entity(movement, 0)
                 
-    def _process_y_movement(self, keys: dict, movement: float):
+    def _process_y_movement(self, keys: dict, movement: float) -> None:
+        """
+        See description of _process_x_movement.
+
+        :param keys: the keys pressed
+        :param movement: the amount of pixel movement in the x-direction
+        """
+        
         up = self._process_direction(keys, self.model.bindings.move_up)
         down = self._process_direction(keys, self.model.bindings.move_down)
         if up and down:
@@ -106,6 +121,12 @@ class PlayerSprite(pygame.sprite.Sprite):
                 self.model.character.move_entity(0, movement)
         
     def _test_collision(self, location: tuple):
+        """
+        Handles collision detection to prevent movement into objects.
+
+        :param location: the intended location of the player.
+        :return: True if the player will collide when making the intended move; False, otherwise.
+        """
         copy_rect = self.rect.copy()
         location = pygame.math.Vector2(location) * self.meters_to_pixels
         self.rect.centerx = location[0]
