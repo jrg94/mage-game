@@ -20,3 +20,13 @@ class Bindings:
         # Help buttons
         self.open_help = ["f1"]
         self.close_help = ["escape", "f1"]
+        
+    @staticmethod
+    def render(button_list: list[str]):
+        button_list = [button.title() for button in button_list]
+        if len(button_list) == 1:
+            return button_list[0]
+        elif len(button_list) == 2:
+            return f"{button_list[0]} and {button_list[1]}"
+        else:
+            return f"{', '.join(button_list[:-1])} and {button_list[-1]}"

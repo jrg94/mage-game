@@ -311,7 +311,11 @@ class GraphicalView(object):
         group.add(self.help)
         
         # Setting up help text
-        help_text = StateText((0, 0), self.font, 'Help is here. space, escape or return.')
+        help_text = StateText(
+            (0, 0), 
+            self.font, 
+            f'Help is here. Use {Bindings.render(self.model.bindings.close_help)} to return.'
+        )
         group.add(help_text)
         
         return group
@@ -328,7 +332,9 @@ class GraphicalView(object):
         menu_text = StateText(
             (self.screen.get_width() / 2, self.screen.get_height() / 2),
             self.font,
-            'You are in the Menu. Space to play. Esc exits.',
+            f'You are in the Menu. '
+            f'Use {Bindings.render(self.model.bindings.close_menu)} to go back to playing. '
+            f'Use {Bindings.render(self.model.bindings.close_game)} to exit the game.',
             anchor="center"
         )
         group.add(menu_text)
@@ -348,7 +354,7 @@ class GraphicalView(object):
         play_text = StateText(
             (0, self.screen.get_height() - self.font.get_height()),
             self.font,
-            f'You are playing the game. {", ".join(self.model.bindings.open_help)} for help.'
+            f'You are playing the game. {Bindings.render(self.model.bindings.open_help)} for help.'
         )
         group.add(play_text)
         
