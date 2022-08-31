@@ -26,7 +26,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.model: GameEngine = model
         self.camera_group: CharacterCameraGroup = camera_group
         self.sprites: list[pygame.sprite.Sprite] = [
-            pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)
+            pygame.image.load(f'assets/player{i}.png').convert_alpha() for i in range(1, 3)
         ]
         
         # Update later
@@ -36,6 +36,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.size = None
         self.image = None
         self.rect = None
+        self.mask = None
         
     def initialize(self, fps: int, meters_to_pixels: float) -> None:
         """
@@ -50,12 +51,11 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.meters_to_pixels = meters_to_pixels
         self.size = pygame.math.Vector2(self.model.character.size) * self.meters_to_pixels
         self.image: pygame.Surface = pygame.transform.scale(self.sprites[0], self.size)
-        self.image.set_colorkey((255, 255, 255), RLEACCEL)
         self.camera_group.add(self)
         self.rect = self.image.get_rect(
             center=self.model.character.coordinates.convert(self.meters_to_pixels / 1000).as_tuple()
         )
-
+        self.mask = pygame.mask.from_surface(self.image)
 
     def _move(self) -> None:
         """
@@ -66,7 +66,15 @@ class PlayerSprite(pygame.sprite.Sprite):
         self._process_x_movement(keys, movement)
         self._process_y_movement(keys, movement)
             
-    def _process_direction(self, keys: dict, bindings: list[str]):
+    def _process_direction(self, keys: dict, bindings: list[str]) -> bool:
+        """
+        Given keys pressed and a set of key bindings, determine
+        if the correct keys have been pressed.
+
+        :param keys: keys pressed
+        :param bindings: key bindings
+        :return: true if one of the keys matching this movement is pressed
+        """
         return any(keys[pygame.key.key_code(binding)] for binding in bindings)
     
     def _process_x_movement(self, keys: dict, movement: float):
@@ -102,7 +110,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         location = pygame.math.Vector2(location) * self.meters_to_pixels
         self.rect.centerx = location[0]
         self.rect.centery = location[1]
-        if len(pygame.sprite.spritecollide(self, self.camera_group, False)) != 1:
+        if len(pygame.sprite.spritecollide(self, self.camera_group, False, pygame.sprite.collide_mask)) != 1:
             self.rect.center = copy_rect.center
             return True
         return False
@@ -131,6 +139,7 @@ class TerrainSprite(pygame.sprite.Sprite):
         self.image.fill("white")
         self.rect = self.image.get_rect(topleft=position)
         self.source = source
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class DummySprite(pygame.sprite.Sprite):
