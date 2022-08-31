@@ -1,13 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import random
+from dataclasses import dataclass
 from enum import Enum, auto
 
 from ..eventmanager import *
+from .bindings import Bindings
 from .character import Character
+from .world import Entity, World
 
 
 class GameState(Enum):
+    """
+    A helpful enum for determining the current state
+    of the game.
+    """
+    
     STATE_INTRO = auto()
     STATE_MENU = auto()
     STATE_HELP = auto()
@@ -24,11 +32,13 @@ class GameEngine:
 
     def __init__(self, event_manager: EventManager):
         self.event_manager: EventManager = event_manager
-        self.event_manager.RegisterListener(self)
+        self.event_manager.register_listener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
-        self.enemies: list[Enemy] = [Enemy()]
-        self.character = Character.new_character()
+        self.enemies: list[Enemy] = None
+        self.character: Character = None
+        self.world: World = None
+        self.bindings: Bindings = Bindings()
 
     def notify(self, event: EventManager) -> None:
         """
@@ -44,11 +54,26 @@ class GameEngine:
             if not event.state:
                 # false if no more states are left
                 if not self.state.pop():
-                    self.event_manager.Post(QuitEvent())
+                    self.event_manager.post(QuitEvent())
             else:
                 # push a new state on the stack
                 self.state.push(event.state)
 
+    def new_game(self) -> None:
+        """
+        Loads game data, if it exists. Creates a new game
+        otherwise. 
+        """
+        self.character = Character.new_character()
+        self.enemies = [Enemy(), Enemy()]
+        self.world = World()
+        self.world.add_entity(self.character)
+        for enemy in self.enemies:
+            x = random.randint(-2500, 2500)
+            y = random.randint(-2500, 2500)
+            enemy.teleport_entity(x, y)
+            self.world.add_entity(enemy)
+        
     def run(self) -> None:
         """
         Starts the game engine loop.
@@ -57,11 +82,11 @@ class GameEngine:
         The loop ends when this object hears a QuitEvent in notify(). 
         """
         self.running = True
-        self.event_manager.Post(InitializeEvent())
-        self.state.push(GameState.STATE_MENU)
+        self.event_manager.post(InitializeEvent())
+        self.state.push(GameState.STATE_INTRO)
         while self.running:
             newTick = TickEvent()
-            self.event_manager.Post(newTick)
+            self.event_manager.post(newTick)
 
 
 class StateMachine(object):
@@ -109,7 +134,7 @@ class StateMachine(object):
 
 
 @dataclass
-class Enemy:
+class Enemy(Entity):
     """
     The Enemy class represents enemy data.
 

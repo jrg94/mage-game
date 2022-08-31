@@ -14,8 +14,8 @@ class CharacterCameraGroup(pygame.sprite.Group):
 
         :param target: a sprite that we want the camera to target
         """
-        self.offset.x = target.rect.centerx - self.half_w
-        self.offset.y = target.rect.centery - self.half_h
+        self.offset.x = target.position[0] - self.half_w
+        self.offset.y = target.position[1] - self.half_h
         
     def camera_draw(self, player: pygame.sprite.Sprite):
         """

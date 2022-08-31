@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .world import Entity, WorldPoint
+
 from .magic import *
 
 
@@ -162,7 +164,7 @@ class Palette:
         return False
 
 @dataclass
-class Character:
+class Character(Entity):
     """
     The Character class represents the character data.
 
@@ -170,6 +172,7 @@ class Character:
     :param _palette: a set of spells that the Character can use.
     :param _size: the xy size of the character in meters 
     :param _view_width: the amount of the world the character can see in meters
+    :param _speed: the speed of the character in meters per second
     """
 
     _spell_book: list[Projectile] = field(default_factory=list)
