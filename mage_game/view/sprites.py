@@ -82,14 +82,17 @@ class PlayerSprite(pygame.sprite.Sprite):
     
     def _process_keys(self, keys: dict, movement: float):
         # TODO: keys should not be processed here expicitly. Use bindings.
-        if keys[pygame.K_w]:
+        if self._process_direction(keys, self.model.bindings.move_up):
             self.model.character.move_entity(0, -movement)
-        if keys[pygame.K_a]:
+        if self._process_direction(keys, self.model.bindings.move_left):
             self.model.character.move_entity(-movement, 0)
-        if keys[pygame.K_s]:
+        if self._process_direction(keys, self.model.bindings.move_down):
             self.model.character.move_entity(0, movement)
-        if keys[pygame.K_d]:
+        if self._process_direction(keys, self.model.bindings.move_right):
             self.model.character.move_entity(movement, 0)
+            
+    def _process_direction(self, keys: dict, bindings: list[str]):
+        return any(keys[pygame.key.key_code(binding)] for binding in bindings)
         
 
     def update(self) -> None:

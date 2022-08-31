@@ -10,7 +10,10 @@ class Bindings:
         # Game buttons
         self.close_game = ["escape"]
         self.select_palette_item = ["1", "2", "3", "4"]
-        self.move_character = ["a", "s", "d", "w"]
+        self.move_left = ["a", "left"]
+        self.move_right = ["d", "right"]
+        self.move_up = ["w", "up"]
+        self.move_down = ["s", "down"]
         self.cast = [1]
 
         # Menu buttons
