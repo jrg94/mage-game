@@ -31,6 +31,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         
         # Update later
         self.frame: int = 0
+        self.frame_ratio: float = 0
         self.fps = 0
         self.meters_to_pixels = 0
         self.size = None
@@ -48,6 +49,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param meters_to_pixels: the number of meters per frame
         """
         self.fps = fps
+        self.frame_ratio = 2 / fps
         self.meters_to_pixels = meters_to_pixels
         self.size = pygame.math.Vector2(self.model.character.size) * self.meters_to_pixels
         self.image: pygame.Surface = pygame.transform.scale(self.sprites[0], self.size)
@@ -63,9 +65,18 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         movement = self.model.character._speed / self.fps
         keys = pygame.key.get_pressed()
+        if self._is_diagonal(keys):
+            movement /= (2 ** .5)
         self._process_x_movement(keys, movement)
         self._process_y_movement(keys, movement)
             
+    def _is_diagonal(self, keys: dict):
+        left = self._process_direction(keys, self.model.bindings.move_left)
+        right = self._process_direction(keys, self.model.bindings.move_right)
+        up = self._process_direction(keys, self.model.bindings.move_up)
+        down = self._process_direction(keys, self.model.bindings.move_down)
+        return (left and up) or (right and up) or (left and down) or (right and down)
+         
     def _process_direction(self, keys: dict, bindings: list[str]) -> bool:
         """
         Given keys pressed and a set of key bindings, determine
@@ -75,6 +86,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param bindings: key bindings
         :return: true if one of the keys matching this movement is pressed
         """
+        
         return any(keys[pygame.key.key_code(binding)] for binding in bindings)
     
     def _process_x_movement(self, keys: dict, movement: float) -> None:
@@ -86,6 +98,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param keys: the keys pressed
         :param movement: the amount of pixel movement in the x-direction
         """
+        
         left = self._process_direction(keys, self.model.bindings.move_left)
         right = self._process_direction(keys, self.model.bindings.move_right)
         if left and right:
@@ -141,7 +154,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         Updates the player sprite on each frame.
         """
         self._move()
-        self.frame += .1
+        self.frame += self.frame_ratio 
         if self.frame >= len(self.sprites):
             self.frame = 0
         self.image = pygame.transform.scale(

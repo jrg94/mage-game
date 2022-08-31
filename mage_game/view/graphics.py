@@ -441,7 +441,7 @@ class GraphicalView(object):
         # Initialize graphics fields
         self.screen = pygame.display.set_mode((0, 0))
         self.clock = pygame.time.Clock()
-        self.fps = 30
+        self.fps = 60
         self.font = pygame.font.Font(None, 40)
         
         # Initialize title screen
