@@ -56,22 +56,22 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param float meters_to_pixels: the meters per pixel conversion rate
         """
         movement = self.source._speed / self.fps
-        self._process_keys(movement)
+        keys = pygame.key.get_pressed()
+        self._process_keys(keys, movement)
         self.position = pygame.math.Vector2(
             self.source.coordinates.x * self.meters_to_pixels,
             self.source.coordinates.y * self.meters_to_pixels
         )
-        temp_rect = self.rect.center
+        temp_rect_center = self.rect.center
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
         collisions = pygame.sprite.spritecollide(self, self.camera_group, False)
         if len(collisions) != 1:
-            self.rect.center = temp_rect
-            self._process_keys(-movement)
+            self.rect.center = temp_rect_center
+            self._process_keys(keys, -movement)
             
     
-    def _process_keys(self, movement: float):
-        keys = pygame.key.get_pressed()
+    def _process_keys(self, keys: dict, movement: float):
         # TODO: keys should not be processed here expicitly. Use bindings.
         if keys[pygame.K_w]:
             self.source.move_entity(0, -movement)
