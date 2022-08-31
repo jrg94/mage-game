@@ -269,7 +269,7 @@ class GraphicalView(object):
         location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
         self.player = PlayerSprite(
             location, 
-            tuple(map(lambda x: x * self.meters_to_pixels, self.model.character._size)),
+            tuple(map(lambda x: x * self.meters_to_pixels, self.model.character.size)),
             self.model.character,
             group
         )
@@ -288,11 +288,12 @@ class GraphicalView(object):
         group = CharacterCameraGroup()
 
         # Setting up dummy enemies
-        for enemy in self.model.enemies:
-            location = self.model.world.locate_entity(enemy).as_tuple()
-            location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
-            dummy = DummySprite(location, enemy)
-            group.add(dummy)
+        for enemy in self.model.world._entities:
+            if isinstance(enemy, Enemy):
+                location = self.model.world.locate_entity(enemy).as_tuple()
+                location = pygame.math.Vector2(location) * self.meters_to_pixels
+                dummy = DummySprite(location, enemy)
+                group.add(dummy)
             
         return group
     

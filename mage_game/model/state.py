@@ -4,6 +4,8 @@ import random
 from dataclasses import dataclass
 from enum import Enum, auto
 
+from build.lib.mage_game.model.world import WorldPoint
+
 from ..eventmanager import *
 from .bindings import Bindings
 from .character import Character
@@ -35,10 +37,9 @@ class GameEngine:
         self.event_manager.register_listener(self)
         self.running: bool = False
         self.state: StateMachine = StateMachine()
-        self.enemies: list[Enemy] = None
+        self.bindings: Bindings = Bindings()
         self.character: Character = None
         self.world: World = None
-        self.bindings: Bindings = Bindings()
 
     def notify(self, event: EventManager) -> None:
         """
@@ -65,13 +66,12 @@ class GameEngine:
         otherwise. 
         """
         self.character = Character.new_character()
-        self.enemies = [Enemy(), Enemy()]
         self.world = World()
         self.world.add_entity(self.character)
-        for enemy in self.enemies:
-            x = random.randint(-2500, 2500)
-            y = random.randint(-2500, 2500)
-            enemy.teleport_entity(x, y)
+        for _ in range(5):
+            x = random.randint(-5, 5)
+            y = random.randint(-5, 5)
+            enemy = Enemy(WorldPoint(x, y), (1, 1))
             self.world.add_entity(enemy)
         
     def run(self) -> None:

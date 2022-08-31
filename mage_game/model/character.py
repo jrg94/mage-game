@@ -177,7 +177,6 @@ class Character(Entity):
 
     _spell_book: list[Projectile] = field(default_factory=list)
     _palette: Palette = field(default_factory=Palette)
-    _size: tuple = (1, .75) 
     _view_width: float = 30
     _speed: float = 1.4
 
@@ -188,7 +187,7 @@ class Character(Entity):
 
         :return: an instance of Character populated with defaults.
         """
-        character = Character()
+        character = Character(WorldPoint(0, 0), (1, .75))
         character._spell_book.extend([
             Projectile(Element.FIRE),
             Projectile(Element.WATER),
@@ -210,7 +209,7 @@ class Character(Entity):
            
         :return: True if the cast was successful; False otherwise
         """
-        return self._palette.cast_active_spell() # TODO: change this method to accept the click position in game units (meters)
+        return self._palette.cast_active_spell() 
     
     def select_palette_item(self, selection: int) -> None:
         """

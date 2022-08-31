@@ -24,7 +24,8 @@ class Entity:
     
     :param coordinates: the XY coordinate for this entity
     """
-    coordinates: WorldPoint = field(default_factory=lambda: WorldPoint(0, 0))
+    coordinates: WorldPoint
+    size: tuple
     
     def move_entity(self, x_shift: float, y_shift: float) -> None:
         """
