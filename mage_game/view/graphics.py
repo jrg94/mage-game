@@ -34,7 +34,8 @@ class GraphicalView(object):
         self.font: pygame.font.Font = None
         
         # Sprites
-        self.play_button: ButtonSprite = None
+        self.new_game_button: ButtonSprite = None
+        self.load_game_button: ButtonSprite = None
         self.player: PlayerSprite = None
         self.palette: PaletteSprite = None
         self.help: ProgressSprite = None
@@ -237,9 +238,11 @@ class GraphicalView(object):
         :param event: the mouse event object
         """
         
-        if self.play_button.detect_press(event):
-            self._load_game()
+        if self.new_game_button.detect_press(event):
+            self._new_game()
             self.event_manager.post(StateChangeEvent(GameState.STATE_PLAY))
+        if self.load_game_button.detect_press(event):
+            pass
 
     def trigger_palette_switch_event(self, event: PaletteSelectEvent):
         """
@@ -381,16 +384,23 @@ class GraphicalView(object):
         
         group = pygame.sprite.Group()
         
-        self.play_button = ButtonSprite(
+        self.new_game_button = ButtonSprite(
             (self.screen.get_rect().centerx, self.screen.get_rect().centery + 50), 
             self.font, 
-            "Play"
+            "New Game"
         )
-        group.add(self.play_button)
+        group.add(self.new_game_button)
+        
+        self.load_game_button = ButtonSprite(
+            (self.screen.get_rect().centerx, self.screen.get_rect().centery + 100), 
+            self.font, 
+            "Load Game"
+        )
+        #group.add(self.load_game_button)
         
         return group
     
-    def _load_game(self):
+    def _new_game(self):
         """
         Loads the game by initializing the model and
         generating appropriate sprites.
