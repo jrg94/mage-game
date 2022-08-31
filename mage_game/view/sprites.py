@@ -15,28 +15,30 @@ class PlayerSprite(pygame.sprite.Sprite):
     """
     The player sprite class.
 
-    :param tuple position: the initial position of the player
-    :param tuple size: the size of the sprite
-    :param Character source: the player data reference
+    :param GameEngine model: the game model
     :param CharacterCameraGroup camera_group: the set of sprites rendered from the POV of the player
     """
 
-    def __init__(self, position: tuple, size: tuple, source: Character, camera_group: CharacterCameraGroup) -> None:
-        logger.debug(f"Created player sprite on screen at {position} with dimensions {size}.")
+    def __init__(self, model: GameEngine, camera_group: CharacterCameraGroup) -> None:
         super().__init__()
-        self.size = size
-        self.camera_group = camera_group
-        self.sprites = [pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)]
-        self.image = pygame.transform.scale(self.sprites[0], self.size)
-        self.image.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.image.get_rect(center=position)
-        self.source = source
-        self.frame = 0
+        
+        # Initialize from inputs
+        self.model: GameEngine = model
+        self.camera_group: CharacterCameraGroup = camera_group
+        self.sprites: list[pygame.sprite.Sprite] = [
+            pygame.image.load(f'assets/player{i}.png') for i in range(1, 3)
+        ]
+        
+        # Update later
+        self.frame: int = 0
         self.fps = 0
         self.meters_to_pixels = 0
-        self.position = pygame.math.Vector2(position)
+        self.position = None
+        self.size = None
+        self.image = None
+        self.rect = None
         
-    def prepare_player(self, fps: int, meters_to_pixels: float) -> None:
+    def initialize(self, fps: int, meters_to_pixels: float) -> None:
         """
         To avoid overloading the initialization of the player sprite,
         I added this method to allow additional variables to be passed
@@ -47,6 +49,13 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         self.fps = fps
         self.meters_to_pixels = meters_to_pixels
+        self.position = self.model.world.locate_entity(self.model.character).as_tuple()
+        self.position = pygame.math.Vector2(self.position) * (self.meters_to_pixels / 1000)
+        self.size = pygame.math.Vector2(self.model.character.size) * self.meters_to_pixels
+        self.image: pygame.Surface = pygame.transform.scale(self.sprites[0], self.size)
+        self.image.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.image.get_rect(center=self.position)
+        self.camera_group.add(self)
 
     def _move(self) -> None:
         """
@@ -55,12 +64,12 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param int fps: frames per second
         :param float meters_to_pixels: the meters per pixel conversion rate
         """
-        movement = self.source._speed / self.fps
+        movement = self.model.character._speed / self.fps
         keys = pygame.key.get_pressed()
         self._process_keys(keys, movement)
         self.position = pygame.math.Vector2(
-            self.source.coordinates.x * self.meters_to_pixels,
-            self.source.coordinates.y * self.meters_to_pixels
+            self.model.character.coordinates.x * self.meters_to_pixels,
+            self.model.character.coordinates.y * self.meters_to_pixels
         )
         temp_rect_center = self.rect.center
         self.rect.centerx = self.position[0]
@@ -74,13 +83,13 @@ class PlayerSprite(pygame.sprite.Sprite):
     def _process_keys(self, keys: dict, movement: float):
         # TODO: keys should not be processed here expicitly. Use bindings.
         if keys[pygame.K_w]:
-            self.source.move_entity(0, -movement)
+            self.model.character.move_entity(0, -movement)
         if keys[pygame.K_a]:
-            self.source.move_entity(-movement, 0)
+            self.model.character.move_entity(-movement, 0)
         if keys[pygame.K_s]:
-            self.source.move_entity(0, movement)
+            self.model.character.move_entity(0, movement)
         if keys[pygame.K_d]:
-            self.source.move_entity(movement, 0)
+            self.model.character.move_entity(movement, 0)
         
 
     def update(self) -> None:

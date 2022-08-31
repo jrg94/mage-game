@@ -254,7 +254,7 @@ class GraphicalView(object):
         
         self.model.character.select_palette_item(event.item)
 
-    def _init_misc_play_sprites(self) -> CharacterCameraGroup:
+    def _init_player_sprite(self) -> CharacterCameraGroup:
         """
         A helper method that initializes all of the sprites
         that are used during the play portion of the game.
@@ -264,19 +264,8 @@ class GraphicalView(object):
         """
         
         group = CharacterCameraGroup()
-        
-        # Setting up player
-        location = self.model.world.locate_entity(self.model.character).as_tuple()
-        location = pygame.math.Vector2(location) * (self.meters_to_pixels / 1000)
-        self.player = PlayerSprite(
-            location, 
-            tuple(map(lambda x: x * self.meters_to_pixels, self.model.character.size)),
-            self.model.character,
-            group
-        )
-        self.player.prepare_player(self.fps, self.meters_to_pixels)
-        group.add(self.player)
-        
+        self.player = PlayerSprite(self.model, group)
+        self.player.initialize(self.fps, self.meters_to_pixels)
         return group
         
     def _init_enemy_sprites(self) -> CharacterCameraGroup:
@@ -432,7 +421,7 @@ class GraphicalView(object):
         self.attack_sprites = CharacterCameraGroup()
         self.enemy_sprites = self._init_enemy_sprites()
         self.terrain_sprites = self._init_environment_sprites()
-        self.play_sprites = self._init_misc_play_sprites()
+        self.play_sprites = self._init_player_sprite()
         self.play_sprites.add(*self.enemy_sprites.sprites())
         self.play_sprites.add(*self.attack_sprites.sprites())
         self.play_sprites.add(*self.terrain_sprites.sprites())

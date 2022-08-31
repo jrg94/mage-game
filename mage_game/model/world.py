@@ -1,4 +1,8 @@
+import itertools
+import logging
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -12,21 +16,23 @@ class WorldPoint:
     """
     x: float = 0
     y: float = 0
-    
+
     def as_tuple(self):
         return (self.x, self.y)
-    
+
+
 @dataclass
 class Entity:
     """
     An entity is any physical object in our game with
     a position in the game world. 
-    
+
     :param coordinates: the XY coordinate for this entity
     """
     coordinates: WorldPoint
     size: tuple
-    
+    id: int = field(default_factory=itertools.count().__next__, init=False)
+
     def move_entity(self, x_shift: float, y_shift: float) -> None:
         """
         Moves this entity by some x and y offset.
@@ -36,7 +42,7 @@ class Entity:
         """
         self.coordinates.x += x_shift
         self.coordinates.y += y_shift
-        
+
     def teleport_entity(self, x: float, y: float):
         """
         Teleports this entity to some x and y coordinate, overwriting
@@ -48,6 +54,7 @@ class Entity:
         self.coordinates.x = x
         self.coordinates.y = y
 
+
 @dataclass
 class World:
     """
@@ -56,20 +63,21 @@ class World:
     system. Useful when setting up the world and tracking the
     locations of entities on the backend (i.e., not in pixel
     units). 
-    
+
     :param _entities: a list of entities in the world. 
     """
-    
+
     _entities: list[Entity] = field(default_factory=lambda: list())
-    
+
     def add_entity(self, entity: Entity) -> None:
         """
         Adds an entity to the World.
 
         :param entity: some object
         """
+        logger.info(f"Adding entity to world: {entity}")
         self._entities.append(entity)
-        
+
     def locate_entity(self, entity) -> WorldPoint | None:
         """
         Searches the world for the entity before returning its location.
@@ -81,4 +89,3 @@ class World:
             if entity == item:
                 return item.coordinates
         return None
-        
