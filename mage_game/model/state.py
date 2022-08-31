@@ -9,6 +9,7 @@ from build.lib.mage_game.model.world import WorldPoint
 from ..eventmanager import *
 from .bindings import Bindings
 from .character import Character
+from .tiles import Terrain
 from .world import Entity, World
 
 
@@ -73,6 +74,7 @@ class GameEngine:
             y = random.randint(-5, 5)
             enemy = Enemy(WorldPoint(x, y), (1, 1))
             self.world.add_entity(enemy)
+        self.world.add_entity(Terrain(WorldPoint(1, 1), (.5, 5)))
         
     def run(self) -> None:
         """

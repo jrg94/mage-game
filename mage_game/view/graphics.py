@@ -42,6 +42,7 @@ class GraphicalView(object):
         
         # Play sprite groups
         self.attack_sprites: CharacterCameraGroup = None
+        self.terrain_sprites: CharacterCameraGroup = None
         self.play_sprites: CharacterCameraGroup = None
         self.enemy_sprites: CharacterCameraGroup = None
         self.ui_sprites: pygame.sprite.Group = None
@@ -288,13 +289,27 @@ class GraphicalView(object):
         group = CharacterCameraGroup()
 
         # Setting up dummy enemies
-        for enemy in self.model.world._entities:
-            if isinstance(enemy, Enemy):
-                location = self.model.world.locate_entity(enemy).as_tuple()
+        for entity in self.model.world._entities:
+            if isinstance(entity, Enemy):
+                location = self.model.world.locate_entity(entity).as_tuple()
                 location = pygame.math.Vector2(location) * self.meters_to_pixels
-                dummy = DummySprite(location, enemy)
+                dummy = DummySprite(location, entity)
                 group.add(dummy)
             
+        return group
+    
+    def _init_environment_sprites(self) -> CharacterCameraGroup:
+        
+        group = CharacterCameraGroup()
+        
+        for entity in self.model.world._entities:
+            if isinstance(entity, Terrain):
+                location = self.model.world.locate_entity(entity).as_tuple()
+                location = pygame.math.Vector2(location) * self.meters_to_pixels
+                size = pygame.math.Vector2(entity.size) * self.meters_to_pixels
+                terrain = TerrainSprite(location, size, entity)
+                group.add(terrain)
+        
         return group
     
     def _init_help_sprites(self) -> pygame.sprite.Group:
@@ -416,9 +431,11 @@ class GraphicalView(object):
         # Create sprite groups
         self.attack_sprites = CharacterCameraGroup()
         self.enemy_sprites = self._init_enemy_sprites()
+        self.terrain_sprites = self._init_environment_sprites()
         self.play_sprites = self._init_misc_play_sprites()
         self.play_sprites.add(*self.enemy_sprites.sprites())
         self.play_sprites.add(*self.attack_sprites.sprites())
+        self.play_sprites.add(*self.terrain_sprites.sprites())
         self.ui_sprites = self._init_ui_sprites()
         self.help_sprites = self._init_help_sprites()
         self.menu_sprites = self._init_menu_sprites()

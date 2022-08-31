@@ -1,5 +1,6 @@
 import logging
 import random
+from shutil import move
 
 import pygame
 from mage_game.view.camera import CharacterCameraGroup
@@ -54,8 +55,24 @@ class PlayerSprite(pygame.sprite.Sprite):
         :param int fps: frames per second
         :param float meters_to_pixels: the meters per pixel conversion rate
         """
-        keys = pygame.key.get_pressed()
         movement = self.source._speed / self.fps
+        self._process_keys(movement)
+        self.position = pygame.math.Vector2(
+            self.source.coordinates.x * self.meters_to_pixels,
+            self.source.coordinates.y * self.meters_to_pixels
+        )
+        temp_rect = self.rect.center
+        self.rect.centerx = self.position[0]
+        self.rect.centery = self.position[1]
+        collisions = pygame.sprite.spritecollide(self, self.camera_group, False)
+        if len(collisions) != 1:
+            self.rect.center = temp_rect
+            self._process_keys(-movement)
+            
+    
+    def _process_keys(self, movement: float):
+        keys = pygame.key.get_pressed()
+        # TODO: keys should not be processed here expicitly. Use bindings.
         if keys[pygame.K_w]:
             self.source.move_entity(0, -movement)
         if keys[pygame.K_a]:
@@ -64,12 +81,7 @@ class PlayerSprite(pygame.sprite.Sprite):
             self.source.move_entity(0, movement)
         if keys[pygame.K_d]:
             self.source.move_entity(movement, 0)
-        self.position = pygame.math.Vector2(
-            self.source.coordinates.x * self.meters_to_pixels,
-            self.source.coordinates.y * self.meters_to_pixels
-        )
-        self.rect.centerx = self.position[0]
-        self.rect.centery = self.position[1]
+        
 
     def update(self) -> None:
         """
@@ -85,6 +97,16 @@ class PlayerSprite(pygame.sprite.Sprite):
         )
         if pygame.mouse.get_pos()[0] < (self.position[0] - self.camera_group.offset[0]):
             self.image = pygame.transform.flip(self.image, True, False)
+
+
+class TerrainSprite(pygame.sprite.Sprite):
+    
+    def __init__(self, position: tuple, size: tuple, source: Terrain) -> None:
+        super().__init__()
+        self.image = pygame.Surface(size)
+        self.image.fill("white")
+        self.rect = self.image.get_rect(topleft=position)
+        self.source = source
 
 
 class DummySprite(pygame.sprite.Sprite):
