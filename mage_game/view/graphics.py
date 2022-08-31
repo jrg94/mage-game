@@ -348,7 +348,7 @@ class GraphicalView(object):
         play_text = StateText(
             (0, self.screen.get_height() - self.font.get_height()),
             self.font,
-            'You are playing the game. F1 for help.'
+            f'You are playing the game. {", ".join(self.model.bindings.open_help)} for help.'
         )
         group.add(play_text)
         

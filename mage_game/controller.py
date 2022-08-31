@@ -55,9 +55,9 @@ class MouseAndKeyboard:
         :param event: the key press event
         """
 
-        if event.key in self.model.bindings.close_game:
+        if pygame.key.name(event.key) in self.model.bindings.close_game:
             self.event_manager.post(QuitEvent())
-        elif event.key in self.model.bindings.close_menu:
+        elif pygame.key.name(event.key) in self.model.bindings.close_menu:
             self.event_manager.post(StateChangeEvent(None))
 
     def key_down_help(self, event: pygame.event.Event):
@@ -69,7 +69,7 @@ class MouseAndKeyboard:
         :param event: the key press event
         """
 
-        if event.key in self.model.bindings.close_help:
+        if pygame.key.name(event.key) in self.model.bindings.close_help:
             self.event_manager.post(StateChangeEvent(None))
 
     def key_down_play(self, event: pygame.event.Event):
@@ -80,12 +80,13 @@ class MouseAndKeyboard:
 
         :param event: the key press event
         """
-        if event.key in self.model.bindings.open_menu:
+        key_name = pygame.key.name(event.key)
+        if key_name in self.model.bindings.open_menu:
             self.event_manager.post(StateChangeEvent(GameState.STATE_MENU))
-        elif event.key in self.model.bindings.open_help:
+        elif key_name in self.model.bindings.open_help:
             self.event_manager.post(StateChangeEvent(GameState.STATE_HELP))
-        elif event.key in self.model.bindings.select_palette_item:
-            self.event_manager.post(PaletteSelectEvent(self.model.bindings.select_palette_item.index(event.key)))
+        elif key_name in self.model.bindings.select_palette_item:
+            self.event_manager.post(PaletteSelectEvent(self.model.bindings.select_palette_item.index(key_name)))
 
     def key_down_intro(self, event: pygame.event.Event):
         """
@@ -94,7 +95,7 @@ class MouseAndKeyboard:
 
         :param event: the key press event
         """
-        if event.key in self.model.bindings.close_game:
+        if pygame.key.name(event.key) in self.model.bindings.close_game:
             self.event_manager.post(StateChangeEvent(None))
 
     def mouse_down_play(self, event: pygame.event.Event):
