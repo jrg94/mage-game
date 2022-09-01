@@ -30,25 +30,23 @@ class PlayerSprite(pygame.sprite.Sprite):
         
         # Update later
         self.frame: int = 0
-        self.frame_ratio: float = 0
-        self.fps = 0
         self.meters_to_pixels = 0
+        self.clock = None
         self.size = None
         self.image = None
         self.rect = None
         self.mask = None
         
-    def initialize(self, fps: int, meters_to_pixels: float) -> None:
+    def initialize(self, clock: pygame.time.Clock, meters_to_pixels: float) -> None:
         """
         To avoid overloading the initialization of the player sprite,
         I added this method to allow additional variables to be passed
         to the sprite. 
 
-        :param fps: the number of frames per second
+        :param clock: the game clock object
         :param meters_to_pixels: the number of meters per frame
         """
-        self.fps = fps
-        self.frame_ratio = 2 / fps
+        self.clock = clock
         self.meters_to_pixels = meters_to_pixels
         self.size = pygame.math.Vector2(self.model.character.size) * self.meters_to_pixels
         self.image: pygame.Surface = pygame.transform.scale(self.sprites[0], self.size)
@@ -62,7 +60,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         """
         Moves the character based on key presses.
         """
-        movement = self.model.character._speed / self.fps
+        movement = self.model.character._speed / self.clock.get_fps()
         keys = pygame.key.get_pressed()
         if self._is_diagonal(keys):
             movement /= (2 ** .5)
@@ -153,7 +151,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         Updates the player sprite on each frame.
         """
         self._move()
-        self.frame += self.frame_ratio 
+        self.frame += 2 / self.clock.get_fps()
         if self.frame >= len(self.sprites):
             self.frame = 0
         self.image = pygame.transform.scale(
@@ -268,30 +266,26 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         # Frame calculations
-        self.charge_frames = 0
-        self.cast_frames = 0
-        self.speed = 0
+        self.clock = None
+        self.meters_to_pixels = 0
         self.trajectory = None
         self.position = None
-        self.radius = 1
-        self.radius_per_frame = 0
+        self.cast_time = 0
+        self.travel_time = 0
+        self.radius = 0
 
         # Collision variables
         self.sprites_hit = []
 
-    def cast(self, charge_frames: int, cast_frames: int, speed: int, radius: int) -> None:
+    def cast(self, clock: pygame.time.Clock, meters_to_pixels: float) -> None:
         """
         Launches the projectile.
 
-        :param charge_frames: the number of frames to spend channeling the attack
-        :param cast_frames: the number of frames the spell will spend flying
-        :param speed: the speed at which the spell will move across the screen in pixels/frame
-        :param radius: the radius of the spell in pixels
+        :param clock: the game clock object
+        :param meters_to_pixels: the conversion factors
         """
-        self.charge_frames = charge_frames
-        self.cast_frames = cast_frames
-        self.speed = speed
-        self.radius_per_frame = radius / self.cast_frames
+        self.clock = clock
+        self.meters_to_pixels = meters_to_pixels
         self._position_projectile()
         self._draw_projectile()
 
@@ -299,12 +293,14 @@ class ProjectileSprite(pygame.sprite.Sprite):
         """
         Animates the projectile. 
         """
-        if self.charge_frames > 0:
+        if self.cast_time < self.source.get_attribute(SpellAttribute.CAST_TIME):
+            self.cast_time += self.clock.get_time() / 1000
             self._charge_animation()
-        elif self.cast_frames > 0:
+        elif self.travel_time < self.source.get_attribute(SpellAttribute.DISTANCE) / self.source.get_attribute(SpellAttribute.SPEED):
+            self.travel_time += self.clock.get_time() / 1000
             self._shoot_animation()
             self._compute_collisions()
-        elif self.cast_frames == 0:
+        else:
             self.kill()
 
     def _charge_animation(self) -> None:
@@ -314,8 +310,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self._draw_projectile()
         self._trajectory_animation()
         self._position_projectile()
-        self.charge_frames -= 1
-        self.radius += self.radius_per_frame
+        self.radius = (self.cast_time / self.source.get_attribute(SpellAttribute.CAST_TIME)) * (self.size[0] / 2)
 
     def _shoot_animation(self) -> None:
         """
@@ -328,7 +323,6 @@ class ProjectileSprite(pygame.sprite.Sprite):
         self.rect.centery = self.position[1]
         self._draw_projectile()
         self._particle_animation()
-        self.cast_frames -= 1
         
     def _trajectory_animation(self) -> None:
         """
@@ -405,8 +399,9 @@ class ProjectileSprite(pygame.sprite.Sprite):
         dx = pygame.mouse.get_pos()[0] - (self.origin.rect.centerx - self.camera_group.offset[0])
         dy = pygame.mouse.get_pos()[1] - (self.origin.rect.centery - self.camera_group.offset[1])
         radians = math.atan2(dy, dx)
-        velocityx = self.speed * math.cos(radians)
-        velocityy = self.speed * math.sin(radians)
+        speed = (self.source.get_attribute(SpellAttribute.SPEED) * self.meters_to_pixels) / self.clock.get_fps()
+        velocityx = speed * math.cos(radians)
+        velocityy = speed * math.sin(radians)
         return pygame.math.Vector2(velocityx, velocityy)
     
     def _compute_collisions(self):

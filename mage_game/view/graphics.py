@@ -95,7 +95,7 @@ class GraphicalView(object):
             self.render_play()
         if current_state == GameState.STATE_HELP:
             self.render_help()
-        self.clock.tick(self.fps)
+        self.clock.tick()
         
     def _handle_cast_event(self) -> None:
         """
@@ -205,10 +205,7 @@ class GraphicalView(object):
         if self.model.character.cast():
             # Setup projectile variables
             source = self.model.character._palette.get_active_item().get_spell()
-            projectile_speed = (source.get_attribute(SpellAttribute.SPEED) * self.meters_to_pixels) / self.fps 
             projectile_radius = source.get_attribute(SpellAttribute.RADIUS) * self.meters_to_pixels
-            charge_frames = source.get_attribute(SpellAttribute.CAST_TIME) * self.fps
-            cast_frames = (source.get_attribute(SpellAttribute.DISTANCE) / source.get_attribute(SpellAttribute.SPEED)) * self.fps
             diameter = math.ceil(projectile_radius * 2)
             
             # Create projectile
@@ -222,9 +219,7 @@ class GraphicalView(object):
             
             # Cast projectile
             projectile.cast(
-                charge_frames,
-                cast_frames,
-                projectile_speed,
+                self.clock,
                 projectile_radius
             )
 
@@ -265,7 +260,7 @@ class GraphicalView(object):
         
         group = CharacterCameraGroup()
         self.player = PlayerSprite(self.model, group)
-        self.player.initialize(self.fps, self.meters_to_pixels)
+        self.player.initialize(self.clock, self.meters_to_pixels)
         return group
         
     def _init_enemy_sprites(self) -> CharacterCameraGroup:
