@@ -1,14 +1,42 @@
 {
   "enemies": [
     {
-      "coordinates": [1, 1],
+      "coordinates": [4, 3.5],
+      "size": [1, 1]
+    },
+    {
+      "coordinates": [-3.5, 3.5],
+      "size": [1, 1]
+    },
+    {
+      "coordinates": [4, -3.5],
+      "size": [1, 1]
+    },
+    {
+      "coordinates": [-3.5, -3.5],
       "size": [1, 1]
     }
   ],
   "terrain": [
     {
-      "coordinates": [-2, -2.5],
-      "size": [0.5, 5]
+      "description": "Bottom Wall",
+      "coordinates": [-4.5, 4.5],
+      "size": [10, 0.5]
+    },
+    {
+      "description": "Left Wall",
+      "coordinates": [-5, -5],
+      "size": [0.5, 10]
+    },
+    {
+      "description": "Right Wall",
+      "coordinates": [5, -5],
+      "size": [0.5, 10]
+    },
+    {
+      "description": "Top Wall",
+      "coordinates": [-5, -5],
+      "size": [10, 0.5]
     }
   ]
 }

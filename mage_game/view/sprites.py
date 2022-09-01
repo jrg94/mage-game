@@ -168,8 +168,9 @@ class TerrainSprite(pygame.sprite.Sprite):
     
     def __init__(self, position: tuple, size: tuple, source: Terrain) -> None:
         super().__init__()
-        self.image = pygame.Surface(size)
+        self.image = pygame.Surface(size).convert_alpha()
         self.image.fill("white")
+        pygame.draw.rect(self.image, "red", self.image.get_rect(), width = 2)
         self.rect = self.image.get_rect(topleft=position)
         self.source = source
         self.mask = pygame.mask.from_surface(self.image)
