@@ -1,4 +1,10 @@
 {
+  "enemies": [
+    {
+      "coordinates": [1, 1],
+      "size": [1, 1]
+    }
+  ],
   "terrain": [
     {
       "coordinates": [-2, -2.5],

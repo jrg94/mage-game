@@ -1,12 +1,11 @@
 import logging
 import random
-from shutil import move
 
 import pygame
-from mage_game.view.camera import CharacterCameraGroup
 from pygame import RLEACCEL
 
 from ..model import *
+from .camera import *
 
 logger = logging.getLogger(__name__)
 

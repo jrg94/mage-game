@@ -1,11 +1,15 @@
 import json
 from enum import Enum
 
+from ..model.enemies import Enemy
 from ..model.tiles import Terrain
 from ..model.world import World, WorldPoint
 
 
 class MapConst(str, Enum):
+    COORDINATES = "coordinates"
+    ENEMIES = "enemies"
+    SIZE = "size"
     TERRAIN = "terrain"
 
 
@@ -22,7 +26,13 @@ def load_map(path: str) -> World:
         entities: list[dict] = map[MapConst.TERRAIN]
         for entity in entities:
             world.add_entity(Terrain(
-                WorldPoint(*entity["coordinates"]),
-                tuple(entity["size"])
+                WorldPoint(*entity[MapConst.COORDINATES]),
+                tuple(entity[MapConst.SIZE])
+            ))
+        enemies: list[dict] = map[MapConst.ENEMIES]
+        for enemy in enemies:
+            world.add_entity(Enemy(
+                WorldPoint(*enemy[MapConst.COORDINATES]),
+                tuple(entity[MapConst.SIZE])
             ))
     return world

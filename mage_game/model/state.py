@@ -71,11 +71,6 @@ class GameEngine:
         self.character = Character.new_character()
         self.world = load_map("maps/new_game.json")
         self.world.add_entity(self.character)
-        for _ in range(5):
-            x = random.randint(-5, 5)
-            y = random.randint(-5, 5)
-            enemy = Enemy(WorldPoint(x, y), (1, 1))
-            self.world.add_entity(enemy)
         
     def run(self) -> None:
         """
@@ -134,14 +129,3 @@ class StateMachine(object):
         """
         self.state_stack.append(state)
         return state
-
-
-@dataclass
-class Enemy(Entity):
-    """
-    The Enemy class represents enemy data.
-
-    :param _hp: the health of the enemy
-    """
-
-    _hp: int = 10
