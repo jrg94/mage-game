@@ -37,7 +37,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.rect = None
         self.mask = None
         
-    def initialize(self, clock: pygame.time.Clock, meters_to_pixels: float) -> None:
+    def spawn(self, clock: pygame.time.Clock, meters_to_pixels: float) -> None:
         """
         To avoid overloading the initialization of the player sprite,
         I added this method to allow additional variables to be passed
@@ -68,12 +68,19 @@ class PlayerSprite(pygame.sprite.Sprite):
         self._process_y_movement(keys, movement)
             
     def _is_diagonal(self, keys: dict):
+        """
+        Tests if a movement is diagonal. Diagonal movements require
+        a slightly different speed.
+
+        :param keys: the set of keys that are pressed
+        :return: True if key presses result in diagonal movement
+        """
         left = self._process_direction(keys, self.model.bindings.move_left)
         right = self._process_direction(keys, self.model.bindings.move_right)
         up = self._process_direction(keys, self.model.bindings.move_up)
         down = self._process_direction(keys, self.model.bindings.move_down)
-        return (left and up) or (right and up) or (left and down) or (right and down)
-         
+        return (left or right) and (up or down) and (not left or not right) and (not up or not down)
+                 
     def _process_direction(self, keys: dict, bindings: list[str]) -> bool:
         """
         Given keys pressed and a set of key bindings, determine
@@ -277,7 +284,7 @@ class ProjectileSprite(pygame.sprite.Sprite):
         # Collision variables
         self.sprites_hit = []
 
-    def cast(self, clock: pygame.time.Clock, meters_to_pixels: float) -> None:
+    def spawn(self, clock: pygame.time.Clock, meters_to_pixels: float) -> None:
         """
         Launches the projectile.
 

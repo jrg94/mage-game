@@ -218,9 +218,9 @@ class GraphicalView(object):
             )
             
             # Cast projectile
-            projectile.cast(
+            projectile.spawn(
                 self.clock,
-                projectile_radius
+                self.meters_to_pixels
             )
 
             # Add projectile to sprite group
@@ -260,7 +260,7 @@ class GraphicalView(object):
         
         group = CharacterCameraGroup()
         self.player = PlayerSprite(self.model, group)
-        self.player.initialize(self.clock, self.meters_to_pixels)
+        self.player.spawn(self.clock, self.meters_to_pixels)
         return group
         
     def _init_enemy_sprites(self) -> CharacterCameraGroup:
