@@ -1,4 +1,5 @@
 from __future__ import annotations
+from json import load
 
 import random
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from .bindings import Bindings
 from .character import Character
 from .tiles import Terrain
 from .world import Entity, World
+from ..util.map_loader import load_map
 
 
 class GameState(Enum):
@@ -67,14 +69,13 @@ class GameEngine:
         otherwise. 
         """
         self.character = Character.new_character()
-        self.world = World()
+        self.world = load_map("maps/new_game.json")
         self.world.add_entity(self.character)
         for _ in range(5):
             x = random.randint(-5, 5)
             y = random.randint(-5, 5)
             enemy = Enemy(WorldPoint(x, y), (1, 1))
             self.world.add_entity(enemy)
-        self.world.add_entity(Terrain(WorldPoint(1, 1), (.5, 5)))
         
     def run(self) -> None:
         """
