@@ -1,17 +1,13 @@
 from __future__ import annotations
 from json import load
 
-import random
 from dataclasses import dataclass
 from enum import Enum, auto
-
-from build.lib.mage_game.model.world import WorldPoint
 
 from ..eventmanager import *
 from .bindings import Bindings
 from .character import Character
-from .tiles import Terrain
-from .world import Entity, World
+from .world import World
 from ..util.map_loader import load_map
 
 
