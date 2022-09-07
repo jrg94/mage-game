@@ -5,6 +5,7 @@ import pygame
 from pygame import RLEACCEL
 
 from ..model import *
+from ..util.asset_loader import load_sprite
 from .camera import *
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.model: GameEngine = model
         self.camera_group: CharacterCameraGroup = camera_group
         self.sprites: list[pygame.sprite.Sprite] = [
-            pygame.image.load(f'assets/player{i}.png').convert_alpha() for i in range(1, 3)
+            load_sprite("player", "player", i).convert_alpha() for i in range(1, 3)
         ]
         
         # Update later

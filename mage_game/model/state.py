@@ -1,14 +1,12 @@
 from __future__ import annotations
-from json import load
 
-from dataclasses import dataclass
 from enum import Enum, auto
 
 from ..eventmanager import *
 from .bindings import Bindings
 from .character import Character
 from .world import World
-from ..util.map_loader import load_map
+from ..util.asset_loader import load_map
 
 
 class GameState(Enum):
@@ -65,7 +63,7 @@ class GameEngine:
         otherwise. 
         """
         self.character = Character.new_character()
-        self.world = load_map("maps/new_game.json")
+        self.world = load_map("new_game")
         self.world.add_entity(self.character)
         
     def run(self) -> None:
