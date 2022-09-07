@@ -1,5 +1,5 @@
-from mage_game.model.character import Palette, PaletteItem
-from mage_game.model.magic import Element, Projectile, SpellAttribute
+from magegame.model.character import Palette, PaletteItem
+from magegame.model.magic import Element, Projectile, SpellAttribute
 
 
 def test_palette_get_active_item_0():

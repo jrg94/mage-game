@@ -3,7 +3,7 @@ import logging
 
 import pygame
 
-from mage_game.view.camera import CharacterCameraGroup
+from magegame.view.camera import CharacterCameraGroup
 
 from ..eventmanager import *
 from ..model import *

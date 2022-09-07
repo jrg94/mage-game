@@ -1,4 +1,4 @@
-from mage_game.model import *
+from magegame.model import *
 
 
 def test_projectile_default():

@@ -1,6 +1,6 @@
 import math
 
-from mage_game.model import AttributeTracking, SpellAttribute
+from magegame.model import AttributeTracking, SpellAttribute
 
 
 def test_tracking_level_1():

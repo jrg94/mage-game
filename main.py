@@ -4,7 +4,7 @@ import os
 import sys
 from logging.handlers import RotatingFileHandler
 
-from mage_game import controller, eventmanager, model, view
+from magegame import controller, eventmanager, model, view
 
 logger = logging.getLogger(__name__)
 
