@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .world import Entity, WorldPoint
-
 from .magic import *
+from .world import Entity, WorldPoint
 
 
 @dataclass
